@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  guardian-bot:
+    build: .
+    container_name: guardian-security-bot
+    restart: unless-stopped
+    environment:
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN}
+      - DISCORD_CLIENT_ID=${DISCORD_CLIENT_ID}
+      - OWNER_USER_ID=${OWNER_USER_ID}
+      - DATABASE_PATH=/app/data/guardian.db
+      - LOG_LEVEL=info
+      - SPAM_SENSITIVITY=0.6
+      - XP_RATE_MULTIPLIER=1.0
+      - MAX_TICKETS_PER_USER=5
+      - ANTI_RAID_JOIN_THRESHOLD=5
+      - APPEAL_SERVER_INVITE=
+    volumes:
+      - bot-data:/app/data
+
+volumes:
+  bot-data:

@@ -1,0 +1,31 @@
+{
+  "name": "guardian-security-bot",
+  "version": "2.0.0",
+  "description": "Advanced AI-powered Discord security bot with spam detection, ticket management, leveling, and anti-raid protection",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "deploy-commands": "node src/deploy-commands.js",
+    "test": "node --experimental-vm-modules --test src/**/*.test.js"
+  },
+  "keywords": [
+    "discord",
+    "security",
+    "bot",
+    "anti-spam",
+    "anti-raid",
+    "moderation",
+    "tickets",
+    "leveling"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.15.3",
+    "dotenv": "^16.4.5",
+    "heap-js": "^2.5.0",
+    "natural": "^8.0.1",
+    "node-cron": "^3.0.3",
+    "sql.js": "^1.14.1"
+  }
+}
