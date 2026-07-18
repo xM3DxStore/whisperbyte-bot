@@ -20,8 +20,5 @@ COPY . .
 # Create data directory for SQLite database
 RUN mkdir -p /app/data
 
-# Use a volume for persistent data
-VOLUME ["/app/data"]
-
 # Run the bot
 CMD ["node", "src/index.js"]
