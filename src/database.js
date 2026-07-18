@@ -1,4 +1,4 @@
-const initSqlJs = require('sql.js');
+const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 const config = require('./config');
@@ -14,34 +14,21 @@ async function initDatabase() {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  const SQL = await initSqlJs();
-
-  if (fs.existsSync(dbPath)) {
-    const buffer = fs.readFileSync(dbPath);
-    db = new SQL.Database(buffer);
-  } else {
-    db = new SQL.Database();
-  }
-
-  db.run('PRAGMA journal_mode = WAL');
-  db.run('PRAGMA busy_timeout = 5000');
+  db = new Database(dbPath);
+  db.pragma('journal_mode = WAL');
+  db.pragma('busy_timeout = 5000');
 
   createTables();
   createIndexes();
-  saveDatabase();
   return db;
 }
 
 function saveDatabase() {
-  if (db && dbPath) {
-    const data = db.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(dbPath, buffer);
-  }
+  // better-sqlite3 writes directly to disk — no manual save needed
 }
 
 function createTables() {
-  db.run(`
+  db.prepare(`
     CREATE TABLE IF NOT EXISTS guilds (
       guild_id TEXT PRIMARY KEY,
       prefix TEXT DEFAULT '!',
@@ -228,30 +215,15 @@ function createIndexes() {
 }
 
 function queryAll(sql, params = []) {
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
-  const results = [];
-  while (stmt.step()) {
-    results.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return results;
+  return db.prepare(sql).all(params);
 }
 
 function queryGet(sql, params = []) {
-  const stmt = db.prepare(sql);
-  stmt.bind(params);
-  let result = null;
-  if (stmt.step()) {
-    result = stmt.getAsObject();
-  }
-  stmt.free();
-  return result;
+  return db.prepare(sql).get(params) || null;
 }
 
 function queryRun(sql, params = []) {
-  db.run(sql, params);
-  saveDatabase();
+  return db.prepare(sql).run(params);
 }
 
 function getGuild(guildId) {

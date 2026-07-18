@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Install build tools needed for better-sqlite3 native module
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+
 # Install production dependencies only
 RUN npm ci --only=production && \
     npm cache clean --force

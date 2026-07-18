@@ -3,13 +3,13 @@ require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 const config = {
   // Bot Token
-  token: process.env.DISCORD_BOT_TOKEN,
+  token: process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_TOKEN,
 
   // Client ID for slash command registration
-  clientId: process.env.DISCORD_CLIENT_ID,
+  clientId: process.env.DISCORD_CLIENT_ID || process.env.CLIENT_ID,
 
   // Owner user ID
-  ownerId: process.env.OWNER_USER_ID,
+  ownerId: process.env.OWNER_USER_ID || process.env.OWNER_IDS,
 
   // Database
   database: {
