@@ -28,7 +28,7 @@ function saveDatabase() {
 }
 
 function createTables() {
-  db.prepare(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS guilds (
       guild_id TEXT PRIMARY KEY,
       prefix TEXT DEFAULT '!',
@@ -53,7 +53,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS spam_scores (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
@@ -69,7 +69,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS warnings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
@@ -82,7 +82,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS tickets (
       ticket_id TEXT PRIMARY KEY,
       guild_id TEXT NOT NULL,
@@ -100,7 +100,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS ticket_orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ticket_id TEXT NOT NULL,
@@ -118,7 +118,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS ticket_messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       ticket_id TEXT NOT NULL,
@@ -131,7 +131,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS user_levels (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
@@ -149,7 +149,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS level_roles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
@@ -161,7 +161,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS audit_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
@@ -174,7 +174,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS raid_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
@@ -186,7 +186,7 @@ function createTables() {
     )
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS scheduled_actions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       guild_id TEXT NOT NULL,
@@ -201,17 +201,17 @@ function createTables() {
 }
 
 function createIndexes() {
-  db.run('CREATE INDEX IF NOT EXISTS idx_spam_scores_guild_user ON spam_scores(guild_id, user_id)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_warnings_guild_user ON warnings(guild_id, user_id)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_tickets_guild ON tickets(guild_id)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_tickets_creator ON tickets(creator_id)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_ticket_orders_ticket ON ticket_orders(ticket_id)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_user_levels_guild ON user_levels(guild_id)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_user_levels_guild_xp ON user_levels(guild_id, xp DESC)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_audit_logs_guild ON audit_logs(guild_id)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_scheduled_actions_execute ON scheduled_actions(execute_at)');
-  db.run('CREATE INDEX IF NOT EXISTS idx_raid_events_guild ON raid_events(guild_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_spam_scores_guild_user ON spam_scores(guild_id, user_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_warnings_guild_user ON warnings(guild_id, user_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_guild ON tickets(guild_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_tickets_creator ON tickets(creator_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_ticket_orders_ticket ON ticket_orders(ticket_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_user_levels_guild ON user_levels(guild_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_user_levels_guild_xp ON user_levels(guild_id, xp DESC)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_audit_logs_guild ON audit_logs(guild_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_scheduled_actions_execute ON scheduled_actions(execute_at)');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_raid_events_guild ON raid_events(guild_id)');
 }
 
 function queryAll(sql, params = []) {
