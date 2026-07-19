@@ -4,8 +4,8 @@
   "description": "Advanced AI-powered Discord security bot with spam detection, ticket management, leveling, and anti-raid protection",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
+    "start": "node src/deploy-commands.js && node src/index.js",
+    "dev": "node --watch src/deploy-commands.js && node --watch src/index.js",
     "deploy-commands": "node src/deploy-commands.js",
     "test": "node --experimental-vm-modules --test src/**/*.test.js"
   },

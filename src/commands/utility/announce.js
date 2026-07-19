@@ -1,5 +1,5 @@
-const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
-const { successEmbed, errorEmbed, infoEmbed } = require('../../utils/embedBuilder');
+const { SlashCommandBuilder, PermissionsBitField, EmbedBuilder } = require('discord.js');
+const { successEmbed, errorEmbed } = require('../../utils/embedBuilder');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -14,7 +14,7 @@ module.exports = {
     )
     .addStringOption(opt => opt
       .setName('message')
-      .setDescription('Announcement message content')
+      .setDescription('Announcement message content (supports bolds, spares, custom lines)')
       .setMaxLength(2000)
       .setRequired(true)
     )
@@ -24,15 +24,29 @@ module.exports = {
     )
     .addStringOption(opt => opt
       .setName('color')
-      .setDescription('Embed color')
+      .setDescription('Embed color (default: None)')
       .addChoices(
+        { name: 'None / Default logo', value: 'none' },
         { name: 'Blue', value: 'blue' },
         { name: 'Green', value: 'green' },
         { name: 'Red', value: 'red' },
         { name: 'Yellow', value: 'yellow' },
         { name: 'Purple', value: 'purple' },
         { name: 'Orange', value: 'orange' },
+        { name: 'Dark Grey', value: 'dark_grey' },
       )
+    )
+    .addStringOption(opt => opt
+      .setName('image')
+      .setDescription('Link to a large image to display inside the embed')
+    )
+    .addStringOption(opt => opt
+      .setName('thumbnail')
+      .setDescription('Link to a small thumbnail image logo')
+    )
+    .addStringOption(opt => opt
+      .setName('footer')
+      .setDescription('Custom footer message at the bottom')
     )
     .addBooleanOption(opt => opt
       .setName('ping')
@@ -45,7 +59,10 @@ module.exports = {
     const title = interaction.options.getString('title');
     const message = interaction.options.getString('message');
     const channel = interaction.options.getChannel('channel') || interaction.channel;
-    const colorOption = interaction.options.getString('color') || 'blue';
+    const colorOption = interaction.options.getString('color') || 'none';
+    const image = interaction.options.getString('image');
+    const thumbnail = interaction.options.getString('thumbnail');
+    const footerText = interaction.options.getString('footer');
     const ping = interaction.options.getBoolean('ping') || false;
 
     if (!channel.isTextBased()) {
@@ -59,22 +76,50 @@ module.exports = {
       yellow: 0xF1C40F,
       purple: 0x9B59B6,
       orange: 0xE67E22,
+      dark_grey: 0x2F3136,
     };
 
-    const embed = infoEmbed(`📢 ${title}`, message)
-      .setColor(colorMap[colorOption] || 0x3498DB)
-      .setFooter({ text: `Announcement by ${interaction.user.tag}` })
+    // Use raw EmbedBuilder so we don't force prepended emojis or colors
+    const embed = new EmbedBuilder()
+      .setTitle(title)
+      .setDescription(message.replace(/\\n/g, '\n')) // support line breaks
       .setTimestamp();
+
+    if (colorOption !== 'none' && colorMap[colorOption]) {
+      embed.setColor(colorMap[colorOption]);
+    }
+
+    if (image) {
+      // Basic match validation
+      if (image.startsWith('http://') || image.startsWith('https://')) {
+        embed.setImage(image);
+      } else {
+        return interaction.reply({ embeds: [errorEmbed('Invalid Image', 'Please provide a valid HTTP/HTTPS link for the image.')], ephemeral: true });
+      }
+    }
+
+    if (thumbnail) {
+      if (thumbnail.startsWith('http://') || thumbnail.startsWith('https://')) {
+        embed.setThumbnail(thumbnail);
+      } else {
+        return interaction.reply({ embeds: [errorEmbed('Invalid Thumbnail', 'Please provide a valid HTTP/HTTPS link for the thumbnail.')], ephemeral: true });
+      }
+    }
+
+    if (footerText) {
+      embed.setFooter({ text: footerText });
+    } else {
+      embed.setFooter({ text: `Announcement by ${interaction.user.tag}` });
+    }
 
     const content = ping ? '@everyone' : '';
 
     await channel.send({ content, embeds: [embed] });
 
     await interaction.reply({
-      embeds: [successEmbed('Announcement Sent',
-        `Announcement sent to ${channel}.\n**Title:** ${title}`
-      )],
+      embeds: [successEmbed('Announcement Sent', `Announcement sent to ${channel}.\n**Title:** ${title}`)],
       ephemeral: true,
     });
   },
 };
+
