@@ -5,7 +5,7 @@ const logger = require('../services/logger');
  * Executed once when the bot comes online.
  */
 module.exports = {
-  name: 'ready',
+  name: 'clientReady',
   once: true,
   async execute(client) {
     logger.info(`🤖 Bot is online as ${client.user.tag}`);
