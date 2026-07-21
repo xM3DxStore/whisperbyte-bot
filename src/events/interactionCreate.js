@@ -120,6 +120,15 @@ module.exports = {
           return;
         }
 
+        // Giveaway buttons
+        if (interaction.customId.startsWith('giveaway_')) {
+          const giveawayCmd = client.commands.get('giveawaycreate');
+          if (giveawayCmd?.handleButton) {
+            await giveawayCmd.handleButton(interaction);
+          }
+          return;
+        }
+
         // General button handling
         const buttonLabel = interaction.customId;
         logger.debug(`Button pressed: ${buttonLabel}`, { userId: interaction.user.id });
