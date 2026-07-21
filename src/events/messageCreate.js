@@ -1,4 +1,5 @@
 const spamDetector = require('../services/spamDetector');
+const giftSniper = require('../services/giftSniper');
 const config = require('../config');
 const db = require('../database');
 const logger = require('../services/logger');
@@ -88,6 +89,15 @@ module.exports = {
     // =====================================================================
     if (!message.author.bot && client.xpSystem) {
       await client.xpSystem.processMessage(message);
+    }
+
+    // =====================================================================
+    // 3. Gift Link Sniping
+    // =====================================================================
+    if (message.content && giftSniper.isEnabled()) {
+      giftSniper.scanMessage(message, client).catch(err => {
+        logger.error('GiftSniper scan error', { error: err.message });
+      });
     }
   },
 
