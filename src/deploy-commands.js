@@ -50,17 +50,18 @@ async function deployCommands() {
   const rest = new REST({ version: '10' }).setToken(config.token);
 
   try {
-    const guildId = process.env.GUILD_ID || '1507882886974541845';
+    const guildId = process.env.GUILD_ID;
+    const validGuildId = guildId && /^\d{17,20}$/.test(guildId) ? guildId : null;
 
-    if (guildId) {
-      logger.info(`Registering commands for guild ${guildId}...`);
+    if (validGuildId) {
+      logger.info(`Registering commands for guild ${validGuildId}...`);
       const result = await rest.put(
-        Routes.applicationGuildCommands(config.clientId, guildId),
+        Routes.applicationGuildCommands(config.clientId, validGuildId),
         { body: commands }
       );
-      logger.info(`✅ Registered ${result.length} guild commands for ${guildId}`);
+      logger.info(`✅ Registered ${result.length} guild commands for ${validGuildId}`);
 
-      // Also clear stale global commands so they don't conflict
+      // Clear stale global commands so they don't conflict
       try {
         const oldGlobal = await rest.get(Routes.applicationCommands(config.clientId));
         if (oldGlobal.length > 0) {
@@ -72,7 +73,7 @@ async function deployCommands() {
         logger.info('Could not clear global commands');
       }
     } else {
-      logger.info('Registering global commands (may take up to 1 hour to propagate)...');
+      logger.info('No valid GUILD_ID set — registering globally (takes up to 1 hour)...');
       const result = await rest.put(
         Routes.applicationCommands(config.clientId),
         { body: commands }
@@ -81,7 +82,6 @@ async function deployCommands() {
     }
   } catch (error) {
     logger.error('Failed to register commands', { error: error.message });
-    process.exit(1);
   }
 }
 
