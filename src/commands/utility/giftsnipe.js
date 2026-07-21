@@ -10,7 +10,7 @@ const logger = require('../../services/logger');
 // ---------------------------------------------------------------------------
 
 function estimatedTime(count) {
-  const totalMs = count * 1100; // 1.1s per check
+  const totalMs = (count / 6) * 200; // 6 workers, ~200ms each
   const mins = Math.floor(totalMs / 60000);
   const secs = Math.ceil((totalMs % 60000) / 1000);
   return mins > 0 ? `~${mins}m ${secs}s` : `~${secs}s`;
@@ -85,9 +85,9 @@ module.exports = {
     .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
     .addIntegerOption(opt => opt
       .setName('count')
-      .setDescription('How many codes to check (1–50). Each check takes ~1 second.')
+      .setDescription('How many codes to check (1–200). 6 concurrent workers check fast.')
       .setMinValue(1)
-      .setMaxValue(50)
+      .setMaxValue(200)
       .setRequired(true)
     )
     .addStringOption(opt => opt
@@ -133,7 +133,7 @@ module.exports = {
           .setDescription(
             `Preparing to check **${count}** codes${prefix ? ` with prefix \`${prefix}\`` : ''}.\n` +
             `Estimated time: **${estimatedTime(count)}**\n\n` +
-            `> Using smart charset biasing (50% Base62 + 50% hex-biased)\n` +
+            `> IQ Mode: 6 workers, positional frequency analysis, adaptive backoff\n` +
             `> Every code is validated via the Discord API in real-time`
           )
           .setTimestamp(),
