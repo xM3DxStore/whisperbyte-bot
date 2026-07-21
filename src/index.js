@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { Client, GatewayIntentBits, Collection, Partials } = require('discord.js');
+const { Client, GatewayIntentBits, Collection, Partials, REST, Routes } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const config = require('./config');
@@ -174,6 +174,38 @@ async function startBot() {
   try {
     await client.login(config.token);
     logger.info('✅ Bot logged in successfully');
+
+    logger.info('🔄 Registering slash commands...');
+    const commandsData = [];
+    client.commands.forEach(cmd => {
+      const json = cmd.data.toJSON();
+      json.integration_types = [0];
+      json.contexts = [0, 1, 2];
+      commandsData.push(json);
+    });
+
+    const rest = new REST({ version: '10' }).setToken(config.token);
+    const guildId = process.env.GUILD_ID;
+    const validGuildId = guildId && /^\d{17,20}$/.test(guildId) ? guildId : null;
+
+    if (validGuildId) {
+      logger.info(`Registering ${commandsData.length} commands to guild ${validGuildId}...`);
+      await rest.put(Routes.applicationGuildCommands(config.clientId, validGuildId), { body: commandsData });
+      logger.info(`✅ Registered ${commandsData.length} guild commands instantly`);
+
+      // Clear stale global commands
+      try {
+        const oldGlobal = await rest.get(Routes.applicationCommands(config.clientId));
+        if (oldGlobal.length > 0) {
+          await rest.put(Routes.applicationCommands(config.clientId), { body: [] });
+          logger.info(`✅ Cleared ${oldGlobal.length} stale global commands`);
+        }
+      } catch (e) { /* ignore */ }
+    } else {
+      logger.info(`Registering ${commandsData.length} commands globally...`);
+      await rest.put(Routes.applicationCommands(config.clientId), { body: commandsData });
+      logger.info(`✅ Registered ${commandsData.length} global commands`);
+    }
   } catch (error) {
     logger.error('❌ Failed to login', { error: error.message });
     process.exit(1);
