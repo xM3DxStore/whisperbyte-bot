@@ -21,4 +21,4 @@ COPY . .
 RUN mkdir -p /app/data
 
 # Run the bot
-CMD ["sh", "-c", "node src/deploy-commands.js; node src/index.js"]
+CMD ["node", "src/index.js"]
