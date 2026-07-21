@@ -50,39 +50,27 @@ async function deployCommands() {
   const rest = new REST({ version: '10' }).setToken(config.token);
 
   try {
-    const guildId = process.env.GUILD_ID;
-
-    // First delete ALL old commands (global + guild) to clear cached ones
-    logger.info('Clearing old commands...');
-    try {
-      const oldGlobal = await rest.get(Routes.applicationCommands(config.clientId));
-      logger.info(`Found ${oldGlobal.length} old global commands, deleting...`);
-      for (const cmd of oldGlobal) {
-        await rest.delete(Routes.applicationCommand(config.clientId, cmd.id));
-        logger.info(`Deleted global command: ${cmd.name}`);
-      }
-    } catch (e) {
-      logger.info('No old global commands to clear');
-    }
+    const guildId = process.env.GUILD_ID || '1507882886974541845';
 
     if (guildId) {
-      try {
-        const oldGuild = await rest.get(Routes.applicationGuildCommands(config.clientId, guildId));
-        logger.info(`Found ${oldGuild.length} old guild commands, deleting...`);
-        for (const cmd of oldGuild) {
-          await rest.delete(Routes.applicationGuildCommand(config.clientId, guildId, cmd.id));
-          logger.info(`Deleted guild command: ${cmd.name}`);
-        }
-      } catch (e) {
-        logger.info('No old guild commands to clear');
-      }
-
       logger.info(`Registering commands for guild ${guildId}...`);
       const result = await rest.put(
         Routes.applicationGuildCommands(config.clientId, guildId),
         { body: commands }
       );
       logger.info(`✅ Registered ${result.length} guild commands for ${guildId}`);
+
+      // Also clear stale global commands so they don't conflict
+      try {
+        const oldGlobal = await rest.get(Routes.applicationCommands(config.clientId));
+        if (oldGlobal.length > 0) {
+          logger.info(`Clearing ${oldGlobal.length} stale global commands...`);
+          await rest.put(Routes.applicationCommands(config.clientId), { body: [] });
+          logger.info('✅ Cleared stale global commands');
+        }
+      } catch (e) {
+        logger.info('Could not clear global commands');
+      }
     } else {
       logger.info('Registering global commands (may take up to 1 hour to propagate)...');
       const result = await rest.put(
