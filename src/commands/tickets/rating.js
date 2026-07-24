@@ -32,7 +32,12 @@ module.exports = {
 
     const embed = new EmbedBuilder()
       .setTitle('⭐ Rate Your Experience')
-      .setDescription(`How was your experience with ticket **${ticketId}**?\n\nClick a button below to rate from 1 (Poor) to 5 (Excellent).`)
+      .setDescription(
+        `How was your experience with ticket **${ticketId}**?\n` +
+        `─────────────────────────\n\n` +
+        `Your feedback is invaluable and helps us maintain the highest quality of support.\n` +
+        `Click a button below to rate from **1** (Poor) to **5** (Excellent).`
+      )
       .setColor(Colors.Gold)
       .setFooter({ text: 'Your feedback helps us improve!' })
       .setTimestamp();
@@ -41,7 +46,12 @@ module.exports = {
     await channel.send({ embeds: [embed], components: [row] });
 
     await interaction.reply({
-      embeds: [successEmbed('Rating Sent', `Rating poll sent for ticket **${ticketId}** in ${channel}`)],
+      embeds: [successEmbed('Rating Sent',
+        `Rating poll has been sent for ticket **${ticketId}**.\n` +
+        `─────────────────────────\n\n` +
+        `📍  Channel: ${channel}\n` +
+        `🎫  Ticket:  ${ticketId}`
+      )],
       ephemeral: true,
     });
   },
@@ -60,8 +70,17 @@ module.exports = {
 
     const labels = { 1: 'Poor', 2: 'Okay', 3: 'Good', 4: 'Great', 5: 'Excellent' };
 
+    const stars = '⭐'.repeat(score) + '☆'.repeat(5 - score);
+
     await interaction.reply({
-      embeds: [successEmbed('Rating Submitted', `You rated ticket **${ticketId}** as **${score}/5 — ${labels[score]}**. Thank you!`)],
+      embeds: [successEmbed('Rating Submitted',
+        `Your feedback has been recorded.\n` +
+        `─────────────────────────\n\n` +
+        `🎫  Ticket:  ${ticketId}\n` +
+        `📊  Rating:  ${score}/5 — ${labels[score]}\n` +
+        `${stars}\n\n` +
+        `Thank you for your feedback!`
+      )],
       ephemeral: true,
     });
 

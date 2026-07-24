@@ -66,14 +66,24 @@ module.exports = {
       logger.info(`Ticket ${ticketId} closed by ${interaction.user.id}`);
 
       await interaction.editReply({
-        embeds: [successEmbed('Ticket Closed', `Ticket **${ticketId}** has been closed.${reason ? `\n**Reason:** ${reason}` : ''}`)],
+        embeds: [successEmbed('Ticket Closed',
+          `Ticket **${ticketId}** has been closed.\n` +
+          `─────────────────────────\n` +
+          (reason ? `📝  Reason: ${reason}\n` : '') +
+          `⚠️  This channel will be deleted automatically in **30 seconds**.`
+        )],
       });
 
       if (ticket.channel_id) {
         const channel = interaction.guild.channels.cache.get(ticket.channel_id);
         if (channel) {
           await channel.send({
-            embeds: [successEmbed('Ticket Closed', `This ticket has been closed by ${interaction.user.tag}.${reason ? `\n**Reason:** ${reason}` : ''}`)],
+            embeds: [successEmbed('Ticket Closed',
+              `This ticket has been closed by ${interaction.user.tag}.\n` +
+              `─────────────────────────\n` +
+              (reason ? `📝  Reason: ${reason}\n` : '') +
+              `⚠️  This channel will be deleted automatically in **30 seconds**.`
+            )],
           });
 
           setTimeout(async () => {

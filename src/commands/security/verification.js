@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionsBitField: PBF } = require('discord.js');
-const { successEmbed, errorEmbed, infoEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, infoEmbed, BRAND } = require('../../utils/embedBuilder');
 const db = require('../../database');
 const logger = require('../../services/logger');
 
@@ -41,7 +41,7 @@ module.exports = {
       const channel = interaction.options.getChannel('channel');
 
       if (role.position >= interaction.guild.members.me.roles.highest.position) {
-        return interaction.reply({ embeds: [errorEmbed('Error', 'That role is higher than my highest role.')], ephemeral: true });
+        return interaction.reply({ embeds: [errorEmbed('Role Hierarchy Error', 'That role is positioned higher than my highest role.\nPlease reorder roles or choose a lower role.')], ephemeral: true });
       }
 
       let verifyChannel = channel;
@@ -65,8 +65,11 @@ module.exports = {
       );
 
       const embed = infoEmbed(
-        '🔒 Verification Required',
-        'Click the button below to verify yourself and gain access to the server.'
+        'Verification Required',
+        `Welcome to **${interaction.guild.name}**.\n` +
+        `${BRAND.divider}\n` +
+        `To gain full access to the server, please verify your account.\n` +
+        `Click the button below to receive your verified role.`
       );
 
       await verifyChannel.send({ embeds: [embed], components: [row] });
@@ -81,8 +84,8 @@ module.exports = {
       );
 
       await interaction.reply({
-        embeds: [successEmbed('Verification Setup',
-          `Verification channel: ${verifyChannel}\nRole on verify: ${role}`
+        embeds: [successEmbed('Verification Configured',
+          `Channel: ${verifyChannel}\nAssigned Role: ${role}\n\nNew members must click the verify button to access the server.`
         )],
       });
     }
@@ -91,7 +94,11 @@ module.exports = {
       db.updateGuild(guildId, { verification_role_id: null, verification_channel_id: null });
 
       await interaction.reply({
-        embeds: [successEmbed('Verification Disabled', 'Verification system has been disabled.')],
+        embeds: [successEmbed('Verification Disabled',
+          'Verification system has been **deactivated**.\n' +
+          `${BRAND.divider}\n` +
+          'Existing verified members keep their roles.\nNew members will have unrestricted access until re-enabled.'
+        )],
       });
     }
 
@@ -101,20 +108,24 @@ module.exports = {
       const channelId = guild?.verification_channel_id;
 
       if (!roleId) {
-        return interaction.reply({ embeds: [infoEmbed('Verification Status', 'Verification is **not set up**.')], ephemeral: true });
+        return interaction.reply({ embeds: [infoEmbed('Verification Status',
+          `⚪ Verification is **not configured**.\nUse \`/verification setup\` to enable it.`
+        )], ephemeral: true });
       }
 
       const role = interaction.guild.roles.cache.get(roleId);
       const channel = interaction.guild.channels.cache.get(channelId);
 
-      await interaction.reply({
-        embeds: [infoEmbed('Verification Status',
-          `**Status:** Enabled\n` +
-          `**Role:** ${role || 'Deleted'}\n` +
-          `**Channel:** ${channel || 'Deleted'}`
-        )],
-        ephemeral: true,
-      });
+      const embed = infoEmbed('Verification Status',
+        `🟢 **Status:** Active\n` +
+        `${BRAND.divider}\n` +
+        `\`Role\`     ${role || '**⚠️ Deleted**'}\n` +
+        `\`Channel\`  ${channel || '**⚠️ Deleted**'}\n` +
+        `${BRAND.divider}\n` +
+        `${(!role || !channel) ? '⚠️ One or more linked resources have been deleted.\nRun `/verification setup` to reconfigure.' : 'All linked resources are intact.'}`
+      );
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 };

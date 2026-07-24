@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, AttachmentBuilder } = require('discord.js');
-const { successEmbed, errorEmbed, infoEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, infoEmbed, BRAND } = require('../../utils/embedBuilder');
 const db = require('../../database');
 
 module.exports = {
@@ -75,22 +75,30 @@ module.exports = {
       const filename = `backup_${guild.name.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.json`;
       const attachment = new AttachmentBuilder(buffer, { name: filename });
 
+      const sizeKB = (buffer.length / 1024).toFixed(1);
+      const sizeMB = (buffer.length / (1024 * 1024)).toFixed(2);
+      const sizeDisplay = buffer.length >= 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+
+      const channelCount = backup.channels ? backup.channels.length : 0;
+      const roleCount = backup.roles ? backup.roles.length : 0;
+
       db.addAuditLog(guild.id, 'BACKUP', interaction.user.id, null,
         `Created ${type} backup`,
         JSON.stringify({ type, filename })
       );
 
+      const stats = [];
+      if (channelCount > 0) stats.push(`Channels: ${channelCount}`);
+      if (roleCount > 0) stats.push(`Roles: ${roleCount}`);
+      if (backup.botConfig) stats.push('Bot Config: included');
+
       await interaction.editReply({
-        embeds: [successEmbed('Backup Created',
-          `**Type:** ${type}\n` +
-          `**File:** ${filename}\n` +
-          `**Size:** ${(buffer.length / 1024).toFixed(1)} KB`
-        )],
+        embeds: [successEmbed('Backup Created', `Type: ${type}\nFile: ${filename}\nSize: ${sizeDisplay}${stats.length > 0 ? `\n\n📦 Contents: ${stats.join(' · ')}` : ''}`)],
         files: [attachment],
       });
     } catch (error) {
       await interaction.editReply({
-        embeds: [errorEmbed('Error', `Failed to create backup: ${error.message}`)],
+        embeds: [errorEmbed('Backup Failed', `An error occurred while creating the backup:\n${error.message}`)],
       });
     }
   },

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
-const { successEmbed, errorEmbed, infoEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, infoEmbed, BRAND } = require('../../utils/embedBuilder');
 const db = require('../../database');
 
 module.exports = {
@@ -46,7 +46,9 @@ module.exports = {
       const user = interaction.options.getUser('user');
 
       if (whitelist.includes(user.id)) {
-        return interaction.reply({ embeds: [errorEmbed('Already Whitelisted', `${user.tag} is already whitelisted.`)], ephemeral: true });
+        return interaction.reply({ embeds: [errorEmbed('Already Whitelisted',
+          `${user.tag} (\`${user.id}\`) is already on the whitelist.\nNo changes were made.`
+        )], ephemeral: true });
       }
 
       whitelist.push(user.id);
@@ -55,7 +57,9 @@ module.exports = {
       db.addAuditLog(guildId, 'WHITELIST_ADD', interaction.user.id, user.id, 'Added to spam/raid whitelist');
 
       await interaction.reply({
-        embeds: [successEmbed('Whitelisted', `${user.tag} has been whitelisted from spam/raid detection.`)],
+        embeds: [successEmbed('User Whitelisted',
+          `${user.tag} has been added to the whitelist.\nSpam and raid detection will no longer apply to this user.`
+        )],
       });
     }
 
@@ -63,7 +67,9 @@ module.exports = {
       const user = interaction.options.getUser('user');
 
       if (!whitelist.includes(user.id)) {
-        return interaction.reply({ embeds: [errorEmbed('Not Whitelisted', `${user.tag} is not whitelisted.`)], ephemeral: true });
+        return interaction.reply({ embeds: [errorEmbed('Not Whitelisted',
+          `${user.tag} (\`${user.id}\`) is not currently whitelisted.\nNo changes were made.`
+        )], ephemeral: true });
       }
 
       whitelist = whitelist.filter(id => id !== user.id);
@@ -72,20 +78,29 @@ module.exports = {
       db.addAuditLog(guildId, 'WHITELIST_REMOVE', interaction.user.id, user.id, 'Removed from spam/raid whitelist');
 
       await interaction.reply({
-        embeds: [successEmbed('Removed', `${user.tag} has been removed from the whitelist.`)],
+        embeds: [successEmbed('User Removed',
+          `${user.tag} has been removed from the whitelist.\nSpam and raid detection will now apply to this user.`
+        )],
       });
     }
 
     if (subcommand === 'list') {
       if (whitelist.length === 0) {
-        return interaction.reply({ embeds: [infoEmbed('Whitelist', 'No users are currently whitelisted.')], ephemeral: true });
+        return interaction.reply({ embeds: [infoEmbed('Whitelist',
+          `⚪ No users are currently whitelisted.\nUse \`/whitelist add\` to exempt a user from spam and raid detection.`
+        )], ephemeral: true });
       }
 
-      const list = whitelist.map(id => `<@${id}>`).join('\n');
-      await interaction.reply({
-        embeds: [infoEmbed(`Whitelist (${whitelist.length})`, list)],
-        ephemeral: true,
-      });
+      const entries = whitelist.map((id, i) => `\`${i + 1}.\` <@${id}> — \`${id}\``).join('\n');
+
+      const embed = infoEmbed(
+        `Whitelisted Users (${whitelist.length})`,
+        entries +
+        `${BRAND.divider}\n` +
+        `_Whitelisted users bypass spam and raid detection._`
+      );
+
+      await interaction.reply({ embeds: [embed], ephemeral: true });
     }
   },
 };

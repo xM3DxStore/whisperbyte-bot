@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
-const { successEmbed, errorEmbed, infoEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, infoEmbed, warningEmbed, BRAND } = require('../../utils/embedBuilder');
 const logger = require('../../services/logger');
 
 module.exports = {
@@ -55,14 +55,20 @@ module.exports = {
 
     logger.moderation('LOCKDOWN_MANUAL', interaction.user.id, null, reason, interaction.guild.id);
 
+    const endTimestamp = Math.floor((Date.now() + duration * 60 * 1000) / 1000);
+
     await interaction.reply({
-      embeds: [successEmbed('🔒 Lockdown Activated',
-        `Server has been placed in lockdown for **${duration} minutes**.\n` +
-        `**Reason:** ${reason}\n\n` +
-        `**Effects:**\n` +
-        `• @everyone can no longer @mention or send messages\n` +
-        `• 60-second slowmode enabled on all channels\n` +
-        `• New member joins will be monitored`
+      embeds: [warningEmbed('Lockdown Activated',
+        `🔒 Server is now under **full lockdown** for **${duration} minutes**.\n` +
+        `Ends <t:${endTimestamp}:R> (<t:${endTimestamp}:f>)\n` +
+        `${BRAND.divider}\n` +
+        `**Reason:** ${reason}\n` +
+        `${BRAND.divider}\n` +
+        `**Active Restrictions:**\n` +
+        `> 🚫 @everyone mention permissions revoked\n` +
+        `> 🚫 Message sending restricted for standard members\n` +
+        `> ⏳ 60-second slowmode on all channels\n` +
+        `> 👁️ New member joins under increased surveillance`
       )],
     });
   },
@@ -73,8 +79,14 @@ module.exports = {
     logger.moderation('LOCKDOWN_DEACTIVATE', interaction.user.id, null, 'Manual deactivation', interaction.guild.id);
 
     await interaction.reply({
-      embeds: [successEmbed('🔓 Lockdown Deactivated',
-        'Server lockdown has been lifted.\nAll normal functions have been restored.'
+      embeds: [successEmbed('Lockdown Deactivated',
+        'Server lockdown has been **lifted**.\n' +
+        `${BRAND.divider}\n` +
+        `**Restored Functions:**\n` +
+        `> ✅ @everyone mentions re-enabled\n` +
+        `> ✅ Message permissions restored\n` +
+        `> ✅ Slowmode removed from all channels\n` +
+        `> ✅ Normal join monitoring resumed`
       )],
     });
   },
@@ -82,17 +94,33 @@ module.exports = {
   async status(interaction, raidDetector) {
     const status = raidDetector.getLockdownStatus(interaction.guild.id);
 
-    const embed = status.active
-      ? infoEmbed('🔒 Lockdown Active',
-        `Lockdown is currently **ACTIVE**.\n` +
-        `Ends: <t:${Math.floor(status.until / 1000)}:R>\n\n` +
-        `Use \`/lockdown deactivate\` to lift it early.`
-      )
-      : infoEmbed('🔓 No Lockdown',
-        'The server is not currently in lockdown mode.\n' +
-        'Use `/lockdown activate` to manually enable lockdown if needed.'
+    if (status.active) {
+      const remaining = Math.floor(status.until / 1000);
+      const elapsed = Math.floor((status.until - Date.now()) / 1000);
+      const total = 15 * 60;
+      const progress = Math.max(0, Math.min(total, total - elapsed));
+      const filled = Math.round((progress / total) * 12);
+      const bar = '█'.repeat(filled) + '░'.repeat(12 - filled);
+
+      const embed = infoEmbed('Lockdown Active',
+        `🔒 **Server is currently under lockdown.**\n` +
+        `${BRAND.divider}\n` +
+        `\`Time Left\`    <t:${remaining}:R>\n` +
+        `\`Expires At\`   <t:${remaining}:f>\n` +
+        `\`${bar}\`\n` +
+        `${BRAND.divider}\n` +
+        `Use \`/lockdown deactivate\` to lift the lockdown early.`
       );
 
-    await interaction.reply({ embeds: [embed] });
+      await interaction.reply({ embeds: [embed] });
+    } else {
+      const embed = infoEmbed('No Active Lockdown',
+        `🟢 The server is **secure** — no lockdown is in effect.\n` +
+        `${BRAND.divider}\n` +
+        `Use \`/lockdown activate\` to manually engage lockdown if needed.`
+      );
+
+      await interaction.reply({ embeds: [embed] });
+    }
   },
 };

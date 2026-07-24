@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { infoEmbed } = require('../../utils/embedBuilder');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { infoEmbed, progressBar, BRAND } = require('../../utils/embedBuilder');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -9,26 +9,73 @@ module.exports = {
   rateLimit: 'STANDARD',
 
   async execute(interaction) {
-    const sent = await interaction.reply({ embeds: [infoEmbed('🏓 Pinging...', 'Calculating...')], fetchReply: true });
+    const sent = await interaction.reply({ embeds: [infoEmbed('🏓 Pinging...', 'Calculating latency metrics...')], fetchReply: true });
 
     const apiLatency = sent.createdTimestamp - interaction.createdTimestamp;
     const wsLatency = interaction.client.ws.ping;
+    const uptime = this.formatUptime(interaction.client.uptime);
 
-    let wsStatus = '🟢';
-    if (wsLatency > 200) wsStatus = '🟡';
-    if (wsLatency > 500) wsStatus = '🔴';
+    const wsBar = progressBar(Math.max(0, 500 - wsLatency), 500, 10);
+    const apiBar = progressBar(Math.max(0, 600 - apiLatency), 600, 10);
 
-    let apiStatus = '🟢';
-    if (apiLatency > 300) apiStatus = '🟡';
-    if (apiLatency > 600) apiStatus = '🔴';
+    let wsStatus, wsColor;
+    if (wsLatency <= 150) { wsStatus = '🟢 Excellent'; wsColor = 'Excellent'; }
+    else if (wsLatency <= 300) { wsStatus = '🟡 Good'; wsColor = 'Good'; }
+    else if (wsLatency <= 500) { wsStatus = '🟠 Fair'; wsColor = 'Fair'; }
+    else { wsStatus = '🔴 Poor'; wsColor = 'Poor'; }
 
-    await interaction.editReply({
-      embeds: [infoEmbed('🏓 Pong!',
-        `${wsStatus} **WebSocket:** ${wsLatency}ms\n` +
-        `${apiStatus} **API:** ${apiLatency}ms\n\n` +
-        `**Uptime:** ${this.formatUptime(interaction.client.uptime)}`
-      )],
-    });
+    let apiStatus, apiColor;
+    if (apiLatency <= 150) { apiStatus = '🟢 Excellent'; apiColor = 'Excellent'; }
+    else if (apiLatency <= 300) { apiStatus = '🟡 Good'; apiColor = 'Good'; }
+    else if (apiLatency <= 600) { apiStatus = '🟠 Fair'; apiColor = 'Fair'; }
+    else { apiStatus = '🔴 Poor'; apiColor = 'Poor'; }
+
+    const overallHealth = (wsColor === 'Excellent' || wsColor === 'Good') && (apiColor === 'Excellent' || apiColor === 'Good')
+      ? '🟢 Operational'
+      : (wsColor === 'Poor' || apiColor === 'Poor')
+        ? '🔴 Degraded'
+        : '🟡 Minor Issues';
+
+    const embed = new EmbedBuilder()
+      .setTitle('🏓 Pong!')
+      .setColor(0x5865F2)
+      .addFields(
+        { name: `${BRAND.thinDivider}`, value: '\u200B', inline: false },
+        {
+          name: '📡 WebSocket',
+          value: `\`\`\`${wsLatency}ms\`\`\`${wsBar} ${wsStatus}`,
+          inline: true,
+        },
+        {
+          name: '🌐 API',
+          value: `\`\`\`${apiLatency}ms\`\`\`${apiBar} ${apiStatus}`,
+          inline: true,
+        },
+        {
+          name: '\u200B',
+          value: '\u200B',
+          inline: true,
+        },
+        {
+          name: `${BRAND.thinDivider}`,
+          value: '\u200B',
+          inline: false,
+        },
+        {
+          name: '⏱️ Uptime',
+          value: `\`${uptime}\``,
+          inline: true,
+        },
+        {
+          name: '📊 Status',
+          value: overallHealth,
+          inline: true,
+        },
+      )
+      .setFooter({ text: BRAND.name, iconURL: BRAND.icon || undefined })
+      .setTimestamp();
+
+    await interaction.editReply({ embeds: [embed] });
   },
 
   formatUptime(ms) {

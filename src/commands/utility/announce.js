@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, EmbedBuilder } = require('discord.js');
-const { successEmbed, errorEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, BRAND } = require('../../utils/embedBuilder');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -66,7 +66,10 @@ module.exports = {
     const ping = interaction.options.getBoolean('ping') || false;
 
     if (!channel.isTextBased()) {
-      return interaction.reply({ embeds: [errorEmbed('Error', 'The specified channel is not a text channel.')], ephemeral: true });
+      return interaction.reply({
+        embeds: [errorEmbed('Invalid Channel', 'The selected channel is not a text-based channel.')],
+        ephemeral: true,
+      });
     }
 
     const colorMap = {
@@ -79,10 +82,9 @@ module.exports = {
       dark_grey: 0x2F3136,
     };
 
-    // Use raw EmbedBuilder so we don't force prepended emojis or colors
     const embed = new EmbedBuilder()
       .setTitle(title)
-      .setDescription(message.replace(/\\n/g, '\n')) // support line breaks
+      .setDescription(message.replace(/\\n/g, '\n'))
       .setTimestamp();
 
     if (colorOption !== 'none' && colorMap[colorOption]) {
@@ -90,11 +92,13 @@ module.exports = {
     }
 
     if (image) {
-      // Basic match validation
       if (image.startsWith('http://') || image.startsWith('https://')) {
         embed.setImage(image);
       } else {
-        return interaction.reply({ embeds: [errorEmbed('Invalid Image', 'Please provide a valid HTTP/HTTPS link for the image.')], ephemeral: true });
+        return interaction.reply({
+          embeds: [errorEmbed('Invalid Image URL', 'Please provide a valid HTTP/HTTPS link for the image.')],
+          ephemeral: true,
+        });
       }
     }
 
@@ -102,7 +106,10 @@ module.exports = {
       if (thumbnail.startsWith('http://') || thumbnail.startsWith('https://')) {
         embed.setThumbnail(thumbnail);
       } else {
-        return interaction.reply({ embeds: [errorEmbed('Invalid Thumbnail', 'Please provide a valid HTTP/HTTPS link for the thumbnail.')], ephemeral: true });
+        return interaction.reply({
+          embeds: [errorEmbed('Invalid Thumbnail URL', 'Please provide a valid HTTP/HTTPS link for the thumbnail.')],
+          ephemeral: true,
+        });
       }
     }
 
@@ -117,9 +124,8 @@ module.exports = {
     await channel.send({ content, embeds: [embed] });
 
     await interaction.reply({
-      embeds: [successEmbed('Announcement Sent', `Announcement sent to ${channel}.\n**Title:** ${title}`)],
+      embeds: [successEmbed('Announcement Delivered', `Successfully sent to ${channel}\nTitle: ${title}`)],
       ephemeral: true,
     });
   },
 };
-

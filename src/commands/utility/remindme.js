@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { successEmbed, errorEmbed, infoEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, infoEmbed, BRAND } = require('../../utils/embedBuilder');
 
 const reminders = new Map();
 
@@ -28,14 +28,14 @@ module.exports = {
     const ms = this.parseDuration(timeStr);
     if (!ms) {
       return interaction.reply({
-        embeds: [errorEmbed('Invalid Time', 'Use format like `30m`, `2h`, `1d`. Max: 7 days.')],
+        embeds: [errorEmbed('Invalid Time Format', 'Use a format like 30m, 2h, or 1d. Maximum duration is 7 days.')],
         ephemeral: true,
       });
     }
 
     if (ms > 7 * 86400000) {
       return interaction.reply({
-        embeds: [errorEmbed('Too Long', 'Maximum reminder time is 7 days.')],
+        embeds: [errorEmbed('Duration Too Long', 'The maximum reminder duration is 7 days.')],
         ephemeral: true,
       });
     }
@@ -44,7 +44,7 @@ module.exports = {
     const timeout = setTimeout(async () => {
       try {
         await interaction.user.send({
-          embeds: [infoEmbed('⏰ Reminder', `You asked me to remind you:\n\n**${message}**\n\n*(Set ${timeStr} ago)*`)],
+          embeds: [infoEmbed('⏰ Reminder', `You asked me to remind you:\n\n**${message}**\n\n*Set ${timeStr} ago*`)],
         });
       } catch (err) {}
       reminders.delete(key);
@@ -54,9 +54,10 @@ module.exports = {
 
     const date = new Date(Date.now() + ms);
     const timeDisplay = date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    const durationDisplay = this.formatDuration(ms);
 
     await interaction.reply({
-      embeds: [successEmbed('Reminder Set', `I'll DM you at **${timeDisplay}** with:\n\n**${message}**`)],
+      embeds: [successEmbed('Reminder Scheduled', `I'll DM you at **${timeDisplay}** (${durationDisplay} from now)\n\n⏰ ${message}`)],
       ephemeral: true,
     });
   },
@@ -69,5 +70,14 @@ module.exports = {
     const unit = match[2][0];
     const multipliers = { m: 60000, h: 3600000, d: 86400000 };
     return value * (multipliers[unit] || 60000);
+  },
+
+  formatDuration(ms) {
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+
+    if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+    if (hours > 0) return `${hours}h`;
+    return `${minutes}m`;
   },
 };

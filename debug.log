@@ -1,0 +1,14 @@
+=== Bot Debug Log ===
+[2026-07-22T00:04:49.656Z] >>> INTERACTION RECEIVED: type=2 name=help user=xm3dx guild=xM3Dx Store
+[2026-07-22T00:04:49.657Z] Command lookup: help => true
+[2026-07-22T00:05:19.306Z] >>> INTERACTION RECEIVED: type=3 name=ticket_close_TKT-MRIJKZF4-UL5P user=xm3dx guild=xM3Dx Store
+[2026-07-22T00:05:32.068Z] >>> INTERACTION RECEIVED: type=2 name=close user=xm3dx guild=xM3Dx Store
+[2026-07-22T00:05:32.069Z] Command lookup: close => true
+[2026-07-22T00:05:49.506Z] >>> INTERACTION RECEIVED: type=2 name=close user=xm3dx guild=xM3Dx Store
+[2026-07-22T00:05:49.507Z] Command lookup: close => true
+[2026-07-22T00:05:54.059Z] >>> INTERACTION RECEIVED: type=3 name=ticket_claim_TKT-MRIJKZF4-UL5P user=xm3dx guild=xM3Dx Store
+[2026-07-22T00:06:03.798Z] >>> INTERACTION RECEIVED: type=2 name=ticket-delete user=xm3dx guild=xM3Dx Store
+[2026-07-22T00:06:03.799Z] Command lookup: ticket-delete => true
+[2026-07-22T00:06:15.051Z] >>> INTERACTION RECEIVED: type=2 name=ticket-delete user=xm3dx guild=xM3Dx Store
+[2026-07-22T00:06:15.052Z] Command lookup: ticket-delete => true
+[2026-07-22T00:07:22.347Z] >>> INTERACTION RECEIVED: type=3 name=ticket_close_TKT-MRIJKZF4-UL5P user=xm3dx guild=xM3Dx Store

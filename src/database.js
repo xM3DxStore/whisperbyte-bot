@@ -20,6 +20,7 @@ async function initDatabase() {
 
   createTables();
   createIndexes();
+  runMigrations();
   return db;
 }
 
@@ -32,6 +33,7 @@ function createTables() {
     CREATE TABLE IF NOT EXISTS guilds (
       guild_id TEXT PRIMARY KEY,
       prefix TEXT DEFAULT '!',
+      spam_enabled INTEGER DEFAULT 1,
       spam_sensitivity REAL DEFAULT 0.6,
       xp_rate_multiplier REAL DEFAULT 1.0,
       xp_enabled INTEGER DEFAULT 1,
@@ -212,6 +214,15 @@ function createIndexes() {
   db.exec('CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at DESC)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_scheduled_actions_execute ON scheduled_actions(execute_at)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_raid_events_guild ON raid_events(guild_id)');
+}
+
+function runMigrations() {
+  const columns = db.prepare("PRAGMA table_info(guilds)").all();
+  const colNames = columns.map(c => c.name);
+
+  if (!colNames.includes('spam_enabled')) {
+    db.exec("ALTER TABLE guilds ADD COLUMN spam_enabled INTEGER DEFAULT 1");
+  }
 }
 
 function queryAll(sql, params = []) {

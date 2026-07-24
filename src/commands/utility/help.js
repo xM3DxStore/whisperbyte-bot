@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { infoEmbed } = require('../../utils/embedBuilder');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { infoEmbed, BRAND } = require('../../utils/embedBuilder');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,25 +27,84 @@ module.exports = {
       return this.showCategory(interaction, category);
     }
 
-    const embed = infoEmbed(
-      '🛡️ Guardian Security Bot',
-      'Your comprehensive Discord security and management solution.\n\n' +
-      '**Core Features:**\n' +
-      '• 🤖 **AI-Powered Spam Detection** — Multi-factor analysis with adaptive learning\n' +
-      '• 🚨 **Anti-Raid Protection** — Automatic detection and lockdown\n' +
-      '• 🎫 **Advanced Ticket System** — Full order & payment tracking\n' +
-      '• ⭐ **XP & Leveling** — Gamified engagement with role rewards\n' +
-      '• 🛡️ **Moderation Suite** — Warn, mute, kick, ban, purge, slowmode\n' +
-      '• 📬 **Giveaway DM** — Broadcast messages to all members\n\n' +
-      '**Quick Links:**\n' +
-      'Use `/help security` for security commands\n' +
-      'Use `/help tickets` for ticket commands\n' +
-      'Use `/help leveling` for XP/leveling commands\n' +
-      'Use `/help moderation` for moderation commands\n' +
-      'Use `/help utility` for utility commands\n\n' +
-      `**Servers:** ${interaction.client.guilds.cache.size}` +
-      ` | **Uptime:** ${this.formatUptime(interaction.client.uptime)}`
-    );
+    const uptime = this.formatUptime(interaction.client.uptime);
+    const guilds = interaction.client.guilds.cache.size;
+    const users = interaction.client.guilds.cache.reduce((a, g) => a + g.memberCount, 0);
+
+    const embed = new EmbedBuilder()
+      .setTitle('🛡️ Guardian Security Bot')
+      .setDescription(
+        'Your comprehensive Discord security and management solution.\n' +
+        `${BRAND.divider}`
+      )
+      .setColor(0x5865F2)
+      .addFields(
+        {
+          name: '🔒 Security',
+          value: '`/help security`',
+          inline: true,
+        },
+        {
+          name: '🎫 Tickets',
+          value: '`/help tickets`',
+          inline: true,
+        },
+        {
+          name: '⭐ Leveling',
+          value: '`/help leveling`',
+          inline: true,
+        },
+        {
+          name: '🛡️ Moderation',
+          value: '`/help moderation`',
+          inline: true,
+        },
+        {
+          name: '⚙️ Utility',
+          value: '`/help utility`',
+          inline: true,
+        },
+        {
+          name: '\u200B',
+          value: '\u200B',
+          inline: true,
+        },
+        {
+          name: `${BRAND.thinDivider}`,
+          value: '\u200B',
+          inline: false,
+        },
+        {
+          name: '🤖 AI-Powered Spam Detection',
+          value: 'Multi-factor analysis with adaptive learning',
+          inline: false,
+        },
+        {
+          name: '🚨 Anti-Raid Protection',
+          value: 'Automatic detection and lockdown',
+          inline: false,
+        },
+        {
+          name: '🎫 Advanced Ticket System',
+          value: 'Full order and payment tracking',
+          inline: false,
+        },
+        {
+          name: '⭐ XP & Leveling',
+          value: 'Gamified engagement with role rewards',
+          inline: false,
+        },
+        {
+          name: '🛡️ Moderation Suite',
+          value: 'Warn, mute, kick, ban, purge, slowmode',
+          inline: false,
+        },
+      )
+      .setFooter({
+        text: `${guilds} servers • ${users} users • Uptime: ${uptime} • ${BRAND.name}`,
+        iconURL: BRAND.icon || undefined,
+      })
+      .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
   },
@@ -55,116 +114,168 @@ module.exports = {
       security: {
         title: '🔒 Security Commands',
         desc: 'Configure and manage security features.',
+        color: 0xED4245,
         commands: [
-          '`/anti-spam settings` — View spam detection settings',
-          '`/anti-spam sensitivity <level>` — Set detection sensitivity (0.0-1.0)',
-          '`/anti-spam thresholds` — Set warn/mute/ban score thresholds',
-          '`/anti-spam whitelist <channel>` — Ignore a channel from spam detection',
-          '`/anti-spam reset <user>` — Reset a user\'s spam score',
-          '`/anti-raid status` — Check anti-raid protection status',
-          '`/anti-raid threshold <joins>` — Set join rate threshold',
-          '`/anti-raid enable/disable` — Toggle raid protection',
-          '`/lockdown activate/deactivate` — Emergency server lockdown',
-          '`/lockdown status` — Check lockdown status',
-          '`/verification setup` — Set up member verification',
-          '`/verification disable` — Disable verification',
-          '`/verification status` — Check verification status',
-          '`/whitelist add <user>` — Whitelist user from spam/raid',
-          '`/whitelist remove <user>` — Remove from whitelist',
-          '`/whitelist list` — View whitelisted users',
+          { name: '/anti-spam settings', desc: 'View spam detection settings' },
+          { name: '/anti-spam sensitivity', desc: 'Set detection sensitivity (0.0–1.0)' },
+          { name: '/anti-spam thresholds', desc: 'Set warn/mute/ban score thresholds' },
+          { name: '/anti-spam whitelist', desc: 'Ignore a channel from spam detection' },
+          { name: '/anti-spam reset', desc: "Reset a user's spam score" },
+          { name: '/anti-raid status', desc: 'Check anti-raid protection status' },
+          { name: '/anti-raid threshold', desc: 'Set join rate threshold' },
+          { name: '/anti-raid enable/disable', desc: 'Toggle raid protection' },
+          { name: '/lockdown activate', desc: 'Emergency server lockdown' },
+          { name: '/lockdown status', desc: 'Check lockdown status' },
+          { name: '/verification setup', desc: 'Set up member verification' },
+          { name: '/verification disable', desc: 'Disable verification' },
+          { name: '/whitelist add', desc: 'Whitelist user from spam/raid' },
+          { name: '/whitelist remove', desc: 'Remove from whitelist' },
+          { name: '/whitelist list', desc: 'View whitelisted users' },
         ],
       },
       tickets: {
         title: '🎫 Ticket Commands',
         desc: 'Create and manage support tickets with order tracking.',
+        color: 0xEB459E,
         commands: [
-          '`/ticket-create <subject>` — Create a new support ticket',
-          '`/ticket-create-panel` — Set up ticket creation panel',
-          '`/ticket-delete [ticket_id]` — Close a ticket',
-          '`/ticket-status view [ticket_id]` — View ticket details',
-          '`/ticket-status update <id> <status>` — Update ticket status',
-          '`/ticket-status list [filter]` — List all tickets',
-          '`/ticket-status my` — View your tickets',
-          '`/ticket-payment record <id> <method> <amount>` — Record payment',
-          '`/ticket-payment status <ticket_id>` — View payment info',
-          '`/ticket-payment complete <id> <bool>` — Mark order complete',
-          '`/close [ticket_id] [reason]` — Quick close a ticket',
-          '`/transcript <ticket_id>` — Export ticket transcript',
-          '`/rating <ticket_id>` — Send satisfaction rating',
+          { name: '/ticket-create', desc: 'Create a new support ticket' },
+          { name: '/ticket-create-panel', desc: 'Set up ticket creation panel' },
+          { name: '/ticket-delete', desc: 'Close a ticket' },
+          { name: '/ticket-status view', desc: 'View ticket details' },
+          { name: '/ticket-status update', desc: 'Update ticket status' },
+          { name: '/ticket-status list', desc: 'List all tickets' },
+          { name: '/ticket-status my', desc: 'View your tickets' },
+          { name: '/ticket-payment record', desc: 'Record payment' },
+          { name: '/ticket-payment status', desc: 'View payment info' },
+          { name: '/ticket-payment complete', desc: 'Mark order complete' },
+          { name: '/close', desc: 'Quick close a ticket' },
+          { name: '/transcript', desc: 'Export ticket transcript' },
+          { name: '/rating', desc: 'Send satisfaction rating' },
         ],
       },
       leveling: {
         title: '⭐ Leveling Commands',
         desc: 'Track XP, levels, and manage the XP system.',
+        color: 0xFEE75C,
         commands: [
-          '`/rank [user]` — Check your or another user\'s rank',
-          '`/rank-card [user]` — Show visual rank card',
-          '`/leaderboard [page]` — View server XP leaderboard',
-          '`/configure-xp settings` — View XP configuration',
-          '`/configure-xp toggle <enabled>` — Enable/disable XP',
-          '`/configure-xp multiplier <rate>` — Set XP rate (0.5x-5x)',
-          '`/configure-xp add-channel <channel>` — Add XP channel',
-          '`/configure-xp ignore <channel>` — Ignore channel (no XP)',
-          '`/configure-xp role-reward <level> <role>` — Set role reward',
-          '`/xp-reset <user>` — Reset a user\'s XP',
+          { name: '/rank', desc: "Check your or another user's rank" },
+          { name: '/rank-card', desc: 'Show visual rank card' },
+          { name: '/leaderboard', desc: 'View server XP leaderboard' },
+          { name: '/configure-xp settings', desc: 'View XP configuration' },
+          { name: '/configure-xp toggle', desc: 'Enable/disable XP' },
+          { name: '/configure-xp multiplier', desc: 'Set XP rate (0.5x–5x)' },
+          { name: '/configure-xp add-channel', desc: 'Add XP channel' },
+          { name: '/configure-xp ignore', desc: 'Ignore channel (no XP)' },
+          { name: '/configure-xp role-reward', desc: 'Set role reward' },
+          { name: '/xp-reset', desc: "Reset a user's XP" },
         ],
       },
       moderation: {
         title: '🛡️ Moderation Commands',
         desc: 'Keep your server safe with powerful moderation tools.',
+        color: 0x57F287,
         commands: [
-          '`/warn <user> <reason>` — Issue a warning to a user',
-          '`/mute <user> <duration> [reason]` — Timeout a user',
-          '`/timeout <user> <duration> [reason]` — Temp mute with duration',
-          '`/kick <user> [reason]` — Kick a user from the server',
-          '`/ban <user> [reason] [days]` — Ban a user',
-          '`/purge <amount> [user] [filter]` — Bulk delete messages',
-          '`/slowmode <seconds> [channel]` — Set channel slowmode',
-          '`/embed <title> <description>` — Send rich embed announcement',
-          '`/logs [limit] [action]` — View moderation action history',
+          { name: '/warn', desc: 'Issue a warning to a user' },
+          { name: '/mute', desc: 'Timeout a user' },
+          { name: '/timeout', desc: 'Temp mute with duration' },
+          { name: '/kick', desc: 'Kick a user from the server' },
+          { name: '/ban', desc: 'Ban a user' },
+          { name: '/purge', desc: 'Bulk delete messages' },
+          { name: '/slowmode', desc: 'Set channel slowmode' },
+          { name: '/embed', desc: 'Send rich embed announcement' },
+          { name: '/logs', desc: 'View moderation action history' },
         ],
       },
       utility: {
         title: '⚙️ Utility Commands',
         desc: 'Additional helpful commands.',
+        color: 0x5865F2,
         commands: [
-          '`/help [category]` — Show this help menu',
-          '`/ping` — Check bot latency',
-          '`/announce <title> <message>` — Send an announcement',
-          '`/giveaway-dm <message>` — DM all members about a giveaway',
-          '`/remindme <time> <message>` — Set a reminder',
-          '`/poll <question> [options]` — Create a reaction poll',
-          '`/backup [type]` — Export server settings',
+          { name: '/help', desc: 'Show this help menu' },
+          { name: '/ping', desc: 'Check bot latency' },
+          { name: '/announce', desc: 'Send an announcement' },
+          { name: '/giveaway-dm', desc: 'DM all members about a giveaway' },
+          { name: '/remindme', desc: 'Set a reminder' },
+          { name: '/poll', desc: 'Create a reaction poll' },
+          { name: '/backup', desc: 'Export server settings' },
         ],
       },
       all: {
         title: '📋 All Commands',
         desc: 'Complete list of all bot commands.',
-        commands: [
-          '**🔒 Security:**',
-          '/anti-spam, /anti-raid, /lockdown, /verification, /whitelist',
-          '',
-          '**🎫 Tickets:**',
-          '/ticket-create, /ticket-panel, /ticket-delete, /ticket-status, /ticket-payment, /close, /transcript, /rating',
-          '',
-          '**⭐ Leveling:**',
-          '/rank, /rank-card, /leaderboard, /configure-xp, /xp-reset',
-          '',
-          '**🛡️ Moderation:**',
-          '/warn, /mute, /timeout, /kick, /ban, /purge, /slowmode, /embed, /logs',
-          '',
-          '**⚙️ Utility:**',
-          '/help, /ping, /announce, /giveaway-dm, /remindme, /poll, /backup',
-        ],
+        color: 0x5865F2,
+        commands: null,
       },
     };
 
     const cat = categories[category];
     if (!cat) return interaction.reply({ content: 'Category not found.', ephemeral: true });
 
-    const embed = infoEmbed(cat.title, `${cat.desc}\n\n${cat.commands.join('\n')}`);
+    if (category === 'all') {
+      const embed = new EmbedBuilder()
+        .setTitle(`📋 All Commands`)
+        .setDescription(`${cat.desc}\n${BRAND.divider}`)
+        .setColor(cat.color)
+        .addFields(
+          {
+            name: '🔒 Security',
+            value: '`/anti-spam` · `/anti-raid` · `/lockdown` · `/verification` · `/whitelist`',
+            inline: false,
+          },
+          {
+            name: '🎫 Tickets',
+            value: '`/ticket-create` · `/ticket-create-panel` · `/ticket-delete` · `/ticket-status` · `/ticket-payment` · `/close` · `/transcript` · `/rating`',
+            inline: false,
+          },
+          {
+            name: '⭐ Leveling',
+            value: '`/rank` · `/rank-card` · `/leaderboard` · `/configure-xp` · `/xp-reset`',
+            inline: false,
+          },
+          {
+            name: '🛡️ Moderation',
+            value: '`/warn` · `/mute` · `/timeout` · `/kick` · `/ban` · `/purge` · `/slowmode` · `/embed` · `/logs`',
+            inline: false,
+          },
+          {
+            name: '⚙️ Utility',
+            value: '`/help` · `/ping` · `/announce` · `/giveaway-dm` · `/remindme` · `/poll` · `/backup`',
+            inline: false,
+          },
+        )
+        .setFooter({ text: `Use /help <category> for details • ${BRAND.name}`, iconURL: BRAND.icon || undefined })
+        .setTimestamp();
+
+      return interaction.reply({ embeds: [embed] });
+    }
+
+    const numbered = cat.commands.map((c, i) => `**${i + 1}.** \`${c.name}\` — ${c.desc}`);
+
+    const embed = new EmbedBuilder()
+      .setTitle(cat.title)
+      .setDescription(`${cat.desc}\n${BRAND.thinDivider}`)
+      .setColor(cat.color)
+      .setTimestamp()
+      .setFooter({ text: `${cat.commands.length} commands • ${BRAND.name}`, iconURL: BRAND.icon || undefined });
+
+    const chunks = this.chunk(numbered, 15);
+    for (const chunk of chunks) {
+      embed.addFields({
+        name: '\u200B',
+        value: chunk.join('\n'),
+        inline: false,
+      });
+    }
 
     await interaction.reply({ embeds: [embed] });
+  },
+
+  chunk(arr, size) {
+    const result = [];
+    for (let i = 0; i < arr.length; i += size) {
+      result.push(arr.slice(i, i + size));
+    }
+    return result;
   },
 
   formatUptime(ms) {

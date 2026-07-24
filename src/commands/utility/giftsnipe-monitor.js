@@ -31,11 +31,17 @@ module.exports = {
       const embed = new EmbedBuilder()
         .setTitle('🎁 Gift Snipe Monitor — Status')
         .setColor(stats.enabled ? Colors.Green : Colors.Grey)
+        .setDescription(
+          stats.enabled
+            ? `> Monitor is currently active.\n\n─────────────────────────`
+            : `> Monitor is currently inactive.\n\n─────────────────────────`
+        )
         .addFields(
-          { name: 'Status', value: stats.enabled ? '🟢 Running' : '🔴 Stopped', inline: true },
-          { name: 'Target Channel', value: stats.targetChannelId ? `<#${stats.targetChannelId}>` : 'None', inline: true },
-          { name: 'Pinging', value: stats.ownerUserId ? `<@${stats.ownerUserId}>` : 'None', inline: true },
-          { name: 'Codes Seen', value: `${stats.seenCodes}`, inline: true },
+          { name: 'Status', value: stats.enabled ? '> 🟢 Running' : '> 🔴 Stopped', inline: true },
+          { name: 'Target Channel', value: stats.targetChannelId ? `> <#${stats.targetChannelId}>` : '> None', inline: true },
+          { name: 'Pinging', value: stats.ownerUserId ? `> <@${stats.ownerUserId}>` : '> None', inline: true },
+          { name: '\u200B', value: '\u200B', inline: false },
+          { name: 'Codes Seen', value: `> **${stats.seenCodes}**`, inline: true },
         )
         .setTimestamp();
 
@@ -47,7 +53,7 @@ module.exports = {
         return interaction.reply({ embeds: [errorEmbed('Not Running', 'The gift snipe monitor is not currently running.')], ephemeral: true });
       }
       giftSniper.disable();
-      return interaction.reply({ embeds: [successEmbed('Monitor Stopped', 'Gift snipe monitor has been stopped.')], ephemeral: true });
+      return interaction.reply({ embeds: [successEmbed('Monitor Stopped', 'The gift snipe monitor has been stopped.\nStart it again with action:Start.')], ephemeral: true });
     }
 
     if (giftSniper.isEnabled()) {
@@ -66,9 +72,11 @@ module.exports = {
       .setColor(Colors.Green)
       .setDescription(
         `Monitoring **all servers** this bot is in for \`discord.gift/\` links.\n\n` +
-        `**Target Channel:** <#${channel.id}>\n` +
-        `**Pinging:** <@${interaction.user.id}>\n\n` +
-        `When someone shares a gift link anywhere, I'll check it instantly and post valid codes here.`
+        `─────────────────────────\n` +
+        `> Target Channel: <#${channel.id}>\n` +
+        `> Pinging: <@${interaction.user.id}>\n` +
+        `> Mode: **Passive real-time scan**\n\n` +
+        `When someone shares a gift link anywhere, I will check it instantly and post valid codes here.`
       )
       .setTimestamp();
 

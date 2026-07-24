@@ -38,6 +38,8 @@ module.exports = {
     const description = interaction.options.getString('description') || '';
     const priority = interaction.options.getInteger('priority') || 1;
 
+    const priorityLabels = { 1: '🟢 Low', 2: '🟡 Medium', 3: '🟠 High', 4: '🔴 Critical' };
+
     try {
       const result = await interaction.client.ticketManager.createTicket(interaction, {
         subject,
@@ -46,14 +48,24 @@ module.exports = {
       });
 
       await interaction.editReply({
-        embeds: [successEmbed('Ticket Created',
-          `Your ticket **${result.ticket.ticket_id}** has been created!\n` +
-          `Check your private channel: ${result.channel}`
+        embeds: [successEmbed('Ticket Created Successfully',
+          `Your support ticket has been opened and assigned to a private channel.\n` +
+          `─────────────────────────\n\n` +
+          `📌  Ticket ID:   ${result.ticket.ticket_id}\n` +
+          `📝  Subject:     ${subject}\n` +
+          `⚡  Priority:    ${priorityLabels[priority] || '🟢 Low'}\n` +
+          `💬  Channel:     ${result.channel}\n\n` +
+          `A support representative will respond shortly.`
         )],
       });
     } catch (error) {
       await interaction.editReply({
-        embeds: [errorEmbed('Error', error.message)],
+        embeds: [errorEmbed('Ticket Creation Failed',
+          `An error occurred while creating your ticket.\n` +
+          `─────────────────────────\n\n` +
+          `${error.message}\n\n` +
+          `If this persists, please contact a server administrator.`
+        )],
       });
     }
   },

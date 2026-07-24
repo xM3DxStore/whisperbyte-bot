@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
-const { successEmbed, errorEmbed, infoEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, infoEmbed, BRAND } = require('../../utils/embedBuilder');
 const db = require('../../database');
 const logger = require('../../services/logger');
 
@@ -8,6 +8,10 @@ module.exports = {
     .setName('anti-spam')
     .setDescription('Configure AI-powered spam detection settings')
     .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator)
+    .addSubcommand(sub => sub
+      .setName('toggle')
+      .setDescription('Enable or disable anti-spam detection entirely')
+    )
     .addSubcommand(sub => sub
       .setName('settings')
       .setDescription('View current anti-spam settings')
@@ -71,6 +75,8 @@ module.exports = {
     const guildId = interaction.guild.id;
 
     switch (subcommand) {
+      case 'toggle':
+        return this.toggleSpam(interaction, guildId);
       case 'settings':
         return this.showSettings(interaction, guildId);
       case 'sensitivity':
@@ -84,20 +90,49 @@ module.exports = {
     }
   },
 
+  async toggleSpam(interaction, guildId) {
+    const guild = db.ensureGuild(guildId);
+    const newState = guild.spam_enabled ? 0 : 1;
+    db.updateGuild(guildId, { spam_enabled: newState });
+
+    const label = newState ? 'Enabled' : 'Disabled';
+    const emoji = newState ? '🟢' : '🔴';
+
+    logger.moderation('CONFIG_UPDATE', interaction.user.id, null, `Anti-spam ${label}`, guildId);
+
+    await interaction.reply({
+      embeds: [successEmbed('Anti-Spam Toggled',
+        `${emoji} Anti-spam detection is now **${label}**.\n${
+          newState
+            ? 'Spam detection is active. Messages will be analyzed and flagged.'
+            : 'Spam detection is off. All messages will pass through without checks.'
+        }`
+      )],
+    });
+  },
+
   async showSettings(interaction, guildId) {
     const guild = db.ensureGuild(guildId);
     const spamScores = db.getHighSpamScores(guildId, 1);
+    const s = guild.spam_sensitivity;
+    const filled = Math.round(s * 10);
+    const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
 
     const embed = infoEmbed(
-      '🛡️ Anti-Spam Settings',
-      `**Sensitivity:** ${guild.spam_sensitivity}\n` +
-      `**XP Enabled:** ${guild.xp_enabled ? '✅ Yes' : '❌ No'}\n` +
-      `**Anti-Raid:** ${guild.anti_raid_enabled ? '✅ Active' : '❌ Disabled'}\n` +
-      `**Lockdown Active:** ${guild.lockdown_active ? '🔴 Yes' : '🟢 No'}\n\n` +
-      `**High Spam Scores (top 5):**\n${
-        spamScores.slice(0, 5).map(s =>
-          `<@${s.user_id}> — Score: ${s.score.toFixed(1)} (${s.violations} violations)`
-        ).join('\n') || 'No high spam scores recorded.'
+      'Anti-Spam Configuration',
+      `\`Sensitivity\`  **${s}**  \`${bar}\`\n` +
+      `\`Anti-Spam\`    ${guild.spam_enabled ? '🟢 Active' : '🔴 Disabled'}\n` +
+      `${BRAND.divider}\n` +
+      `\`XP System\`    ${guild.xp_enabled ? '🟢 Active' : '🔴 Disabled'}\n` +
+      `\`Anti-Raid\`    ${guild.anti_raid_enabled ? '🟢 Active' : '🔴 Disabled'}\n` +
+      `\`Lockdown\`     ${guild.lockdown_active ? '🔴 Active' : '🟢 Clear'}\n` +
+      `${BRAND.divider}\n` +
+      `**Top Offenders**\n${
+        spamScores.length > 0
+          ? spamScores.slice(0, 5).map((s, i) =>
+            `\`${i + 1}.\` <@${s.user_id}> — **${s.score.toFixed(1)}** score · **${s.violations}** violations`
+          ).join('\n')
+          : '> _No elevated spam scores._'
       }`
     );
 
@@ -110,8 +145,14 @@ module.exports = {
 
     logger.moderation('CONFIG_UPDATE', interaction.user.id, null, `Spam sensitivity set to ${level}`, guildId);
 
+    const filled = Math.round(level * 10);
+    const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
+    const label = level >= 0.8 ? 'Maximum' : level >= 0.6 ? 'High' : level >= 0.4 ? 'Moderate' : level >= 0.2 ? 'Low' : 'Minimal';
+
     await interaction.reply({
-      embeds: [successEmbed('Sensitivity Updated', `Spam detection sensitivity set to **${level}**.\nHigher values = more aggressive detection.`)],
+      embeds: [successEmbed('Sensitivity Updated',
+        `Detection sensitivity set to **${level}** — _${label}_\n\`${bar}\`\nHigher values increase detection strictness.`
+      )],
     });
   },
 
@@ -120,26 +161,18 @@ module.exports = {
     const mute = interaction.options.getNumber('mute');
     const ban = interaction.options.getNumber('ban');
 
-    // Build response message
     let responseParts = [];
 
-    if (warn !== null) {
-      responseParts.push(`Warn: **${warn}**`);
-    }
-    if (mute !== null) {
-      responseParts.push(`Mute: **${mute}**`);
-    }
+    if (warn !== null) responseParts.push(`Warn Threshold   **${warn}**`);
+    if (mute !== null) responseParts.push(`Mute Threshold   **${mute}**`);
     if (ban !== null) {
-      responseParts.push(`Ban: **${ban}**`);
-      // Adjust sensitivity proportionally to ban threshold
+      responseParts.push(`Ban Threshold    **${ban}**`);
       db.updateGuild(guildId, { spam_sensitivity: Math.max(0.1, Math.min(1.0, ban / 20)) });
     }
 
     await interaction.reply({
       embeds: [successEmbed('Thresholds Updated',
-        `${warn !== null ? `• Warn: **${warn}**\n` : ''}` +
-        `${mute !== null ? `• Mute: **${mute}**\n` : ''}` +
-        `${ban !== null ? `• Ban: **${ban}**\n` : ''}`
+        `${responseParts.join('\n')}\n\nActions are triggered when a user's spam score reaches the listed threshold.`
       )],
     });
   },
@@ -155,13 +188,17 @@ module.exports = {
       const updated = ignoreChannels.filter(id => id !== channel.id);
       db.setXpChannels(guildId, updated);
       await interaction.reply({
-        embeds: [successEmbed('Channel Removed', `${channel} has been removed from the ignore list.`)],
+        embeds: [successEmbed('Ignore Removed',
+          `${channel} is no longer ignored.\nSpam detection will now monitor messages in this channel.`
+        )],
       });
     } else {
       ignoreChannels.push(channel.id);
       db.updateGuild(guildId, { ignore_channels: JSON.stringify(ignoreChannels) });
       await interaction.reply({
-        embeds: [successEmbed('Channel Ignored', `${channel} will be ignored by spam detection.`)],
+        embeds: [successEmbed('Channel Ignored',
+          `${channel} added to the ignore list.\nSpam detection will skip all messages in this channel.`
+        )],
       });
     }
   },
@@ -173,7 +210,9 @@ module.exports = {
     logger.moderation('SPAM_RESET', interaction.user.id, user.id, 'Spam score manually reset', guildId);
 
     await interaction.reply({
-      embeds: [successEmbed('Score Reset', `Spam score for ${user.tag} has been reset to 0.`)],
+      embeds: [successEmbed('Score Reset',
+        `Spam score for **${user.tag}** has been reset.\nAll violations cleared and monitoring has been restored.`
+      )],
     });
   },
 };

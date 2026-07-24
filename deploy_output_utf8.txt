@@ -1,0 +1,40 @@
+﻿[2026-07-16T12:29:39.672Z] [INFO] Loaded command: anti-raid
+[2026-07-16T12:29:39.682Z] [INFO] Loaded command: anti-spam
+[2026-07-16T12:29:39.684Z] [INFO] Loaded command: lockdown
+[2026-07-16T12:29:39.686Z] [INFO] Loaded command: logs
+[2026-07-16T12:29:39.688Z] [INFO] Loaded command: verification
+[2026-07-16T12:29:39.693Z] [INFO] Loaded command: whitelist
+[2026-07-16T12:29:39.696Z] [INFO] Loaded command: close
+[2026-07-16T12:29:39.697Z] [INFO] Loaded command: rating
+[2026-07-16T12:29:39.700Z] [INFO] Loaded command: ticket-create
+[2026-07-16T12:29:39.702Z] [INFO] Loaded command: ticket-delete
+[2026-07-16T12:29:39.703Z] [INFO] Loaded command: ticket-panel
+[2026-07-16T12:29:39.706Z] [INFO] Loaded command: ticket-payment
+[2026-07-16T12:29:39.709Z] [INFO] Loaded command: ticket-status
+[2026-07-16T12:29:39.711Z] [INFO] Loaded command: transcript
+[2026-07-16T12:29:39.714Z] [INFO] Loaded command: configure-xp
+[2026-07-16T12:29:39.717Z] [INFO] Loaded command: leaderboard
+[2026-07-16T12:29:39.719Z] [INFO] Loaded command: rank-card
+[2026-07-16T12:29:39.721Z] [INFO] Loaded command: rank
+[2026-07-16T12:29:39.722Z] [INFO] Loaded command: xp-reset
+[2026-07-16T12:29:39.726Z] [INFO] Loaded command: ban
+[2026-07-16T12:29:39.729Z] [INFO] Loaded command: embed
+[2026-07-16T12:29:39.732Z] [INFO] Loaded command: kick
+[2026-07-16T12:29:39.734Z] [INFO] Loaded command: mute
+[2026-07-16T12:29:39.736Z] [INFO] Loaded command: purge
+[2026-07-16T12:29:39.737Z] [INFO] Loaded command: slowmode
+[2026-07-16T12:29:39.741Z] [INFO] Loaded command: timeout
+[2026-07-16T12:29:39.743Z] [INFO] Loaded command: warn
+[2026-07-16T12:29:39.745Z] [INFO] Loaded command: announce
+[2026-07-16T12:29:39.748Z] [INFO] Loaded command: backup
+[2026-07-16T12:29:39.751Z] [INFO] Loaded command: giftsnipe-run
+[2026-07-16T12:29:39.753Z] [INFO] Loaded command: giftsnipe
+[2026-07-16T12:29:39.769Z] [INFO] Loaded command: giveaway-dm
+[2026-07-16T12:29:39.770Z] [INFO] Loaded command: help
+[2026-07-16T12:29:39.773Z] [INFO] Loaded command: iqnitro
+[2026-07-16T12:29:39.775Z] [INFO] Loaded command: ping
+[2026-07-16T12:29:39.776Z] [INFO] Loaded command: poll
+[2026-07-16T12:29:39.778Z] [INFO] Loaded command: remindme
+[2026-07-16T12:29:39.778Z] [INFO] Loaded 37 commands total
+[2026-07-16T12:29:39.779Z] [INFO] Registering commands for guild 1507882886974541845...
+[2026-07-16T12:29:40.410Z] [INFO] Γ£à Registered 37 guild commands for 1507882886974541845

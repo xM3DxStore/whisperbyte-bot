@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField, EmbedBuilder, Colors } = require('discord.js');
-const { successEmbed, errorEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, BRAND } = require('../../utils/embedBuilder');
 
 const activePolls = new Map();
 
@@ -40,24 +40,37 @@ module.exports = {
 
     if (options.length > 10) {
       return interaction.reply({
-        embeds: [errorEmbed('Too Many Options', 'Maximum 10 options allowed.')],
+        embeds: [errorEmbed('Too Many Options', 'Maximum of 10 options allowed per poll.')],
         ephemeral: true,
       });
     }
 
     const embed = new EmbedBuilder()
       .setTitle('📊 Poll')
-      .setDescription(`**${question}**`)
+      .setDescription(
+        `${BRAND.thinDivider}\n` +
+        `**${question}**\n` +
+        `${BRAND.thinDivider}`
+      )
       .setColor(Colors.Blurple)
-      .setFooter({ text: `Poll by ${interaction.user.tag}${duration ? ` • Ends in ${duration}m` : ''}` })
-      .setTimestamp();
+      .setTimestamp()
+      .setFooter({
+        text: `Started by ${interaction.user.tag}${duration ? ` • Ends in ${duration}m` : ''}`,
+        iconURL: BRAND.icon || undefined,
+      });
 
     if (options.length > 0) {
-      const optionList = options.map((opt, i) => `${numberEmojis[i]} ${opt}`).join('\n');
-      embed.addFields({ name: 'Options', value: optionList, inline: false });
+      const optionList = options.map((opt, i) => `${numberEmojis[i]}  **${opt}**`).join('\n');
+      embed.addFields({ name: '📝 Options', value: optionList, inline: false });
     } else {
-      embed.addFields({ name: 'React with', value: '👍 Yes / 👎 No', inline: false });
+      embed.addFields({ name: '👍👎 Yes / No Poll', value: 'React with 👍 or 👎 to vote', inline: false });
     }
+
+    embed.addFields({
+      name: '\u200B',
+      value: `> React below to cast your vote • Results are counted automatically${duration ? ' when the timer expires' : ''}`,
+      inline: false,
+    });
 
     const msg = await interaction.reply({ embeds: [embed], fetchReply: true });
 
@@ -80,14 +93,26 @@ module.exports = {
             count: r.count - 1,
           })).filter(r => r.count > 0).sort((a, b) => b.count - a.count);
 
+          const totalVotes = results.reduce((a, r) => a + r.count, 0);
+          const winner = results.length > 0 ? results[0] : null;
+
           const resultText = results.length > 0
-            ? results.map(r => `${r.emoji}: **${r.count}** votes`).join('\n')
+            ? results.map(r => {
+                const pct = totalVotes > 0 ? Math.round((r.count / totalVotes) * 100) : 0;
+                const bar = progressBar(r.count, totalVotes, 10);
+                const isWinner = winner && r.emoji === winner.emoji;
+                return `${isWinner ? '👑' : r.emoji} **${r.count}** votes (${pct}%) ${bar}`;
+              }).join('\n')
             : 'No votes were cast.';
 
           const resultEmbed = new EmbedBuilder()
             .setTitle('📊 Poll Results')
-            .setDescription(`**${question}**\n\n${resultText}`)
-            .setColor(Colors.Gold)
+            .setDescription(
+              `**${question}**\n${BRAND.thinDivider}\n${resultText}\n${BRAND.thinDivider}` +
+              (winner ? `\n\n👑 **Winner: ${winner.emoji} with ${winner.count} vote${winner.count !== 1 ? 's' : ''}**` : '')
+            )
+            .setColor(winner ? 0xFEE75C : Colors.Grey)
+            .setFooter({ text: `${totalVotes} total vote${totalVotes !== 1 ? 's' : ''} • ${BRAND.name}`, iconURL: BRAND.icon || undefined })
             .setTimestamp();
 
           await fetched.edit({ embeds: [resultEmbed] });

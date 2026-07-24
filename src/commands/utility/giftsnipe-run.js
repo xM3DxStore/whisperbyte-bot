@@ -47,7 +47,14 @@ module.exports = {
         new EmbedBuilder()
           .setTitle('🚀 Infinite Sniper Started')
           .setColor(Colors.Green)
-          .setDescription(`Background sniper is running limitlessly! I will ping you here: <#${targetChannelId}> immediately when I find a valid gift link.`)
+          .setDescription(
+            `Background sniper is running limitlessly!\n\n` +
+            `─────────────────────────\n` +
+            `> Target: <#${targetChannelId}>\n` +
+            `> Mode: **Infinite background scan**\n` +
+            `> Speed: **~1 code per second**\n\n` +
+            `I will ping you immediately when a valid gift link is found.`
+          )
           .setTimestamp(),
       ],
       ephemeral: true,
@@ -80,10 +87,11 @@ module.exports = {
               .setTitle('🎉 VALID GIFT LINK FOUND!')
               .setColor(Colors.Gold)
               .setDescription(
-                `🔗 **https://discord.gift/${result.code}**\n` +
-                `↳ *Type: ${result.type ?? 'Gift'}*\n` +
-                (result.expiresAt ? `↳ *Expires: <t:${Math.floor(new Date(result.expiresAt) / 1000)}:R>*\n` : '') +
-                `\n*Checked ${codesChecked} codes to find this!*`
+                `🔗 **https://discord.gift/${result.code}**\n\n` +
+                `─────────────────────────\n` +
+                `> Type: **${result.type ?? 'Gift'}**\n` +
+                (result.expiresAt ? `> Expires: <t:${Math.floor(new Date(result.expiresAt) / 1000)}:R>\n` : '') +
+                `> Codes checked: **${codesChecked}**`
               )
               .setTimestamp();
 
@@ -105,7 +113,7 @@ module.exports = {
     } catch (err) {
       activeSnipers.delete(interaction.user.id);
       logger.error('InfiniteSniper: Error fetching channel', { error: err.message });
-      await interaction.followUp({ content: 'Failed to start snippet because the target channel could not be found.', ephemeral: true });
+      await interaction.followUp({ embeds: [errorEmbed('Startup Failed', 'Could not start sniper — the target channel could not be found.')], ephemeral: true });
     }
   },
 };

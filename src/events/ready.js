@@ -8,26 +8,34 @@ module.exports = {
   name: 'clientReady',
   once: true,
   async execute(client) {
-    logger.info(`🤖 Bot is online as ${client.user.tag}`);
-    logger.info(`   • Servers: ${client.guilds.cache.size}`);
-    logger.info(`   • Users: ${client.users.cache.size}`);
-    logger.info(`   • Commands: ${client.application?.commands?.cache?.size || 'Loading...'}`);
+    const serverCount = client.guilds.cache.size;
+    const userCount = client.users.cache.size;
+    const cmdCount = client.application?.commands?.cache?.size || 'Loading...';
 
-    // Set bot activity status
+    logger.info('═══════════════════════════════════════');
+    logger.info(`  Logged in as ${client.user.tag}`);
+    logger.info(`  Servers: ${serverCount} | Users: ${userCount} | Commands: ${cmdCount}`);
+    logger.info('═══════════════════════════════════════');
+
     client.user.setPresence({
       activities: [{
-        name: `${client.guilds.cache.size} servers | /help`,
-        type: 3, // WATCHING
+        name: `${serverCount} servers | /help`,
+        type: 3,
       }],
       status: 'online',
     });
 
-    // Rotate activity status every 30 minutes
     const activities = [
-      { name: `${client.guilds.cache.size} servers | /help`, type: 3 },
-      { name: 'for spam and raids', type: 3 },  // WATCHING
-      { name: '🛡️ Guardian Security', type: 0 }, // PLAYING
-      { name: 'AI threat analysis', type: 2 },   // LISTENING
+      { name: `${serverCount} servers | /help`, type: 3 },
+      { name: 'for spam and raids', type: 3 },
+      { name: '🛡️ over server security', type: 3 },
+      { name: 'AI threat analysis', type: 2 },
+      { name: 'with /moderate', type: 0 },
+      { name: 'over your tickets', type: 3 },
+      { name: '/verify to get started', type: 1 },
+      { name: 'with user reports', type: 0 },
+      { name: 'for suspicious activity', type: 3 },
+      { name: 'server analytics', type: 2 },
     ];
 
     let index = 0;
@@ -37,8 +45,8 @@ module.exports = {
         activities: [activities[index]],
         status: 'online',
       });
-    }, 1800000); // 30 minutes
+    }, 1800000);
 
-    logger.info('✅ Bot initialization complete');
+    logger.info('Bot initialization complete');
   },
 };

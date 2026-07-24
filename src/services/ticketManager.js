@@ -1,7 +1,7 @@
 const { ChannelType, PermissionsBitField, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 const config = require('../config');
 const db = require('../database');
-const { successEmbed, errorEmbed, infoEmbed, ticketEmbed } = require('../utils/embedBuilder');
+const { successEmbed, errorEmbed, infoEmbed, ticketEmbed, premiumEmbed, BRAND } = require('../utils/embedBuilder');
 const logger = require('./logger');
 
 /**
@@ -108,7 +108,7 @@ class TicketManager {
       if (channel) {
         const embed = successEmbed(
           'Ticket Closed',
-          `Ticket ${ticketId} has been closed by ${member.user.tag}.${reason ? `\n**Reason:** ${reason}` : ''}`
+          `Closed by ${member.user.tag}${reason ? `\nReason: ${reason}` : ''}\nThis channel will be archived and deleted in 30 seconds.`
         );
         await channel.send({ embeds: [embed] });
 
@@ -261,19 +261,27 @@ class TicketManager {
           ]),
       );
 
-    const embed = infoEmbed(
-      '🎫 Create a Ticket',
-      'Select a ticket type from the dropdown below to create a support ticket.\n\n' +
-      '**Guidelines:**\n' +
-      `• Maximum ${config.tickets.maxPerUser} active tickets per user\n` +
-      '• Please be detailed in your request\n' +
-      '• A support team member will assist you shortly\n\n' +
-      '**Ticket Types:**\n' +
-      '• **General Support** — General questions and help\n' +
-      '• **Order Support** — Questions about your orders\n' +
-      '• **Report** — Report rule violations or issues\n' +
-      '• **Payment Issue** — Billing and payment inquiries\n' +
-      '• **Other** — Anything else'
+    const embed = premiumEmbed(
+      'Support Center',
+      [
+        'Need assistance? Open a ticket and our team will help you promptly.',
+        '',
+        BRAND.thinDivider,
+        '',
+        '** ── Available Ticket Types ──**',
+        '',
+        '` 💬 ` **General Support** — Questions, help, and general inquiries',
+        '` 📦 ` **Order Support** — Track, modify, or inquire about orders',
+        '` 🚨 ` **Report** — Report rule violations or user issues',
+        '` 💳 ` **Payment Issue** — Billing disputes and payment questions',
+        '` 📋 ` **Other** — Anything not covered above',
+        '',
+        BRAND.thinDivider,
+        '',
+        `> 📋  Active ticket limit: **${config.tickets.maxPerUser}**`,
+        '> ⏱️  Average response time: **Within minutes**',
+        '> 🔒  Privacy: Ticket channels are visible only to you and staff',
+      ].join('\n')
     );
 
     await channel.send({ embeds: [embed], components: [row] });
@@ -354,9 +362,8 @@ class TicketManager {
         });
 
         const embed = successEmbed(
-          'Ticket Created!',
-          `Your ticket **${result.ticket.ticket_id}** has been created.\n` +
-          `Check your private channel: ${result.channel}`
+          'Ticket Created',
+          `Ticket ID: ${result.ticket.ticket_id}\nChannel: ${result.channel}\nA support agent will be with you shortly.`
         );
 
         await interaction.editReply({ embeds: [embed], ephemeral: true });
@@ -498,8 +505,8 @@ class TicketManager {
       );
 
     await channel.send({
-      content: `${creator}, welcome to your ticket! A support team member will be with you shortly. ${supportRole ? supportRole.toString() : ''}`,
-      embeds: [ticketInfoEmbed],
+      content: `${creator}`,
+      embeds: [infoEmbed('Ticket Opened', `Welcome to your ticket, ${creator}. Our support team has been notified and will assist you shortly.${supportRole ? `\n\n${supportRole}` : ''}`)],
       components: [closeButton],
     });
 
@@ -590,7 +597,7 @@ class TicketManager {
           r.name === config.tickets.roles.supportTeam || r.name === config.tickets.roles.adminOverride
         );
         if (!isStaff && interaction.member.id !== ticket.creator_id) {
-          await interaction.editReply({ embeds: [errorEmbed('Permission Denied', 'Only the ticket creator or staff can close this ticket.')], ephemeral: true });
+          await interaction.editReply({ embeds: [errorEmbed('Access Denied', 'You must be the ticket creator or a staff member to close this ticket.')], ephemeral: true });
           return;
         }
 
@@ -618,7 +625,7 @@ class TicketManager {
           r.name === config.tickets.roles.supportTeam || r.name === config.tickets.roles.adminOverride
         );
         if (!isStaff) {
-          await interaction.editReply({ embeds: [errorEmbed('Permission Denied', 'Only support team members can claim tickets.')], ephemeral: true });
+          await interaction.editReply({ embeds: [errorEmbed('Access Denied', 'Only members of the support team can claim tickets.')], ephemeral: true });
           return;
         }
 
@@ -630,7 +637,7 @@ class TicketManager {
         if (ticket.channel_id) {
           const channel = interaction.guild.channels.cache.get(ticket.channel_id);
           if (channel) {
-            await channel.send({ embeds: [infoEmbed('Ticket Claimed', `This ticket has been claimed by ${interaction.member.user.tag}. They will assist you shortly.`)] });
+            await channel.send({ embeds: [infoEmbed('Ticket Claimed', `Claimed by ${interaction.member.user.tag}\nYou will be assisted shortly.`)] });
           }
         }
       } catch (error) {

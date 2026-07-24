@@ -29,33 +29,58 @@ module.exports = {
 
   async execute(interaction) {
     const level = interaction.options.getString('level');
-    await interaction.reply({ content: '🧠 **Initializing IQ Calculation Protocol...**' });
+    await interaction.reply({ embeds: [
+      new EmbedBuilder()
+        .setTitle('🧠 Initializing IQ Calculation Protocol...')
+        .setColor(Colors.Blurple)
+        .setDescription(`> Preparing quantum neural matrix...\n\n─────────────────────────\n> Difficulty: **${level.toUpperCase()}**`)
+        .setTimestamp(),
+    ] });
     
     await sleep(2000);
-    await interaction.editReply(`⚙️ **Setting difficulty to:** \`[${level.toUpperCase()}]\`\nLoading AI models...`);
+    await interaction.editReply({ embeds: [
+      new EmbedBuilder()
+        .setTitle('⚙️ Calibrating...')
+        .setColor(Colors.Blurple)
+        .setDescription(`> Setting difficulty to **${level.toUpperCase()}**\n> Loading AI models...\n\n─────────────────────────\n> Status: **Warming up processors**`)
+        .setTimestamp(),
+    ] });
     
     await sleep(2000);
-    await interaction.editReply(`🧮 **Running quantum calculations on Discord's algorithm...**\n*Searching multidimensional space for a valid code...*`);
+    await interaction.editReply({ embeds: [
+      new EmbedBuilder()
+        .setTitle('🧮 Quantum Calculations In Progress...')
+        .setColor(Colors.Blurple)
+        .setDescription(`> Running quantum calculations on Discord's algorithm\n> Searching multidimensional space for a valid code\n\n─────────────────────────\n> Status: **Scanning gift code matrix**`)
+        .setTimestamp(),
+    ] });
     
     await sleep(2500);
-    await interaction.editReply(`🧩 **Bypassing entropy... extracting collision...**\n*Identified 1 guaranteed valid payload!*`);
+    await interaction.editReply({ embeds: [
+      new EmbedBuilder()
+        .setTitle('🧩 Collision Detected!')
+        .setColor(Colors.Gold)
+        .setDescription(`> Bypassing entropy... extracting collision\n> Identified **1** guaranteed valid payload\n\n─────────────────────────\n> Status: **Finalizing extraction**`)
+        .setTimestamp(),
+    ] });
     
     await sleep(2000);
     
     const code = generateFakeCode();
     
     const embed = new EmbedBuilder()
-      .setTitle('🎉 VALID GIFT LINK FOUND (IQ Bypass)')
+      .setTitle('🎉 VALID GIFT LINK FOUND — IQ Bypass')
       .setColor(Colors.Green)
       .setDescription(
-        `Through intense \`${level.toUpperCase()}\` intelligence calculations, we forced a collision!\n\n` +
-        `🔗 **https://discord.gift/${code}**\n` +
-        `↳ *Type: Nitro Premium*\n` +
-        `↳ *Method: Quantum IQ Bypass*`
+        `Through intense **${level.toUpperCase()}** intelligence calculations, we forced a collision!\n\n` +
+        `🔗 **https://discord.gift/${code}**\n\n` +
+        `─────────────────────────\n` +
+        `> Type: **Nitro Premium**\n` +
+        `> Method: **Quantum IQ Bypass**`
       )
-      .setFooter({ text: 'Enjoy your successfully calculated nitro! 💎' })
+      .setFooter({ text: 'Enjoy your successfully calculated nitro!' })
       .setTimestamp();
 
-    await interaction.editReply({ content: `<@${interaction.user.id}> CALCULATION COMPLETE! 💎`, embeds: [embed] });
+    await interaction.editReply({ content: `<@${interaction.user.id}> CALCULATION COMPLETE!`, embeds: [embed] });
   }
 };

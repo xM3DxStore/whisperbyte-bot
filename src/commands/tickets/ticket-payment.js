@@ -85,7 +85,7 @@ module.exports = {
 
     const ticket = db.getTicket(ticketId);
     if (!ticket) {
-      return interaction.reply({ embeds: [errorEmbed('Error', `Ticket ${ticketId} not found.`)], ephemeral: true });
+      return interaction.reply({ embeds: [errorEmbed('Ticket Not Found', `No ticket found with ID \`${ticketId}\`.`)], ephemeral: true });
     }
 
     // Find or create order for this ticket
@@ -114,9 +114,13 @@ module.exports = {
 
     await interaction.reply({
       embeds: [successEmbed('Payment Recorded',
-        `**Ticket:** ${ticketId}\n` +
-        `**Method:** ${method}\n` +
-        `**Amount:** ${amount.toFixed(2)} ${currency}`
+        `Payment has been successfully logged to this ticket.\n` +
+        `─────────────────────────\n\n` +
+        `📌  Ticket:    ${ticketId}\n` +
+        `💳  Method:    ${method}\n` +
+        `💰  Amount:    ${amount.toFixed(2)} ${currency}\n` +
+        `📅  Status:    PAID\n` +
+        `👤  Recorded by: ${interaction.user}`
       )],
     });
   },
@@ -135,24 +139,30 @@ module.exports = {
       return interaction.reply({
         embeds: [infoEmbed('💳 Payment Status',
           `**Ticket:** ${ticketId}\n` +
-          `**Order:** No order recorded yet.\n` +
-          `Use \`/ticket-payment record\` to add payment info.`
+          `**Order:** No order recorded yet.\n\n` +
+          '💡 **Tip:** Use `/ticket-payment record` to add payment information to this ticket.'
         )],
         ephemeral: true,
       });
     }
 
     const order = orders[0];
+    const paymentMethod = order.payment_method || 'Not recorded';
+    const paymentAmount = order.payment_amount ? `$${order.payment_amount.toFixed(2)} ${order.payment_currency || 'USD'}` : 'Not recorded';
+    const paymentStatus = order.payment_status || 'N/A';
+
     const embed = infoEmbed('💳 Payment & Order Status',
-      `**Ticket:** ${ticketId}\n` +
-      `**Status:** ${ticket.status}\n\n` +
-      `**📦 Order Details:**\n${order.order_details || 'N/A'}\n\n` +
-      `**💳 Payment:**\n` +
-      `• Method: ${order.payment_method || 'Not recorded'}\n` +
-      `• Amount: ${order.payment_amount ? `$${order.payment_amount.toFixed(2)} ${order.payment_currency || 'USD'}` : 'Not recorded'}\n` +
-      `• Payment Status: ${order.payment_status}\n\n` +
-      `**✅ Order Complete:** ${order.is_complete ? '✅ Yes' : '❌ No'}\n` +
-      `**Order Status:** ${order.order_status}`
+      `**Ticket:**  ${ticketId}\n` +
+      `**Status:**   ${ticket.status}\n` +
+      `─────────────────────────\n\n` +
+      `📦 **Order Details**\n` +
+      `${order.order_details || 'N/A'}\n\n` +
+      `💳 **Payment Information**\n` +
+      `•  Method:  ${paymentMethod}\n` +
+      `•  Amount:  ${paymentAmount}\n` +
+      `•  Status:  ${paymentStatus}\n\n` +
+      `✅ **Order Complete:** ${order.is_complete ? 'Yes' : 'No'}\n` +
+      `📋 **Order Status:** ${order.order_status}`
     );
 
     await interaction.reply({ embeds: [embed] });

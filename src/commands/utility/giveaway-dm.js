@@ -42,8 +42,8 @@ module.exports = {
       const retryMinutes = Math.ceil(guildLimit.retryAfter / 60000);
       return interaction.reply({
         embeds: [errorEmbed('Rate Limited',
-          `Giveaway DM can only be sent once every 5 minutes per server.\n` +
-          `Please wait **${retryMinutes} minute(s)**.`
+          `Giveaway DM broadcast is limited to once every 5 minutes per server.\n` +
+          `Please wait ${retryMinutes} minute(s) before trying again.`
         )],
         ephemeral: true,
       });
@@ -58,14 +58,15 @@ module.exports = {
       const willReceive = memberCount - botCount - excludeCount;
 
       const embed = infoEmbed(
-        '📬 Giveaway DM Preview',
-        `**Message:**\n${message}\n\n` +
-        `**Stats:**\n` +
-        `• Total members: ${memberCount}\n` +
-        `• Bots excluded: ${botCount}\n` +
-        `${excludeRole ? `• ${excludeRole.name} role excluded: ${excludeCount}\n` : ''}` +
-        `• Members who will receive DM: **${willReceive}**\n\n` +
-        `*This is a preview. No DMs have been sent.*`
+        'Giveaway DM Preview',
+        `**Message:**\n\`\`\`${message}\`\`\`\n` +
+        `─────────────────────────\n` +
+        `**Delivery Statistics:**\n` +
+        `> Total members: **${memberCount}**\n` +
+        `> Bots excluded: **${botCount}**\n` +
+        `${excludeRole ? `> ${excludeRole.name} excluded: **${excludeCount}**\n` : ''}` +
+        `> Recipients: **${willReceive}**\n\n` +
+        `*This is a preview — no DMs have been sent.*`
       );
 
       return interaction.reply({ embeds: [embed], ephemeral: true });
@@ -140,17 +141,23 @@ module.exports = {
       `Sent to ${sentCount} members, ${failedCount} failed`, interaction.guild.id
     );
 
+    const totalAttempted = sentCount + failedCount;
+    const successRate = totalAttempted > 0 ? Math.round((sentCount / totalAttempted) * 100) : 0;
+
     const embed = successEmbed(
-      '📬 Giveaway DMs Completed',
-      `**Message:** ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}\n\n` +
-      `**Results:**\n` +
-      `• ✅ Successfully sent: **${sentCount}**\n` +
-      `• ❌ Failed: **${failedCount}**\n` +
-      `• 🤖 Bots skipped: **${botCount}**\n\n` +
+      'Giveaway DMs Completed',
+      `**Message:**\n\`\`\`${message.substring(0, 80)}${message.length > 80 ? '...' : ''}\`\`\`\n` +
+      `─────────────────────────\n` +
+      `**Delivery Results:**\n` +
+      `> Successfully sent: **${sentCount}**\n` +
+      `> Failed: **${failedCount}**\n` +
+      `> Bots skipped: **${botCount}**\n` +
+      `> Success rate: **${successRate}%**\n\n` +
       (failedCount > 0
-        ? `Failed users (${Math.min(failedUsers.length, 10)} of ${failedCount}):\n${failedUsers.slice(0, 10).map(u => `• ${u}`).join('\n')}\n\n` +
-          `*Failed DMs are usually due to users having DMs disabled or not sharing a server with the bot.*`
-        : 'All DMs sent successfully!')
+        ? `**Failed Users** (${Math.min(failedUsers.length, 10)} of ${failedCount}):\n` +
+          failedUsers.slice(0, 10).map(u => `> ${u}`).join('\n') + '\n\n' +
+          `*Failed DMs are usually due to users having DMs disabled or privacy settings blocking bot messages.*`
+        : `All DMs delivered successfully!`)
     );
 
     await interaction.editReply({ embeds: [embed], ephemeral: true });

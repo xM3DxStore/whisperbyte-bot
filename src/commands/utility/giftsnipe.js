@@ -24,18 +24,19 @@ function progressBar(current, total, width = 12) {
 function buildProgressEmbed(checked, total, hits, rateLimitHits, lastCode) {
   const pct = Math.round((checked / total) * 100);
   return new EmbedBuilder()
-    .setTitle('🎁 Gift Sniper — Running...')
+    .setTitle('✦ Gift Sniper — Running ✦')
     .setColor(Colors.Blurple)
     .setDescription(
-      `\`${progressBar(checked, total)}\` **${pct}%**\n` +
+      `> \`${progressBar(checked, total, 20)}\` **${pct}%**\n\n` +
       `Checked **${checked}/${total}** codes`
     )
     .addFields(
-      { name: '✅ Valid Links Found', value: `${hits}`, inline: true },
-      { name: '⏱️ Rate Limit Hits', value: `${rateLimitHits}`, inline: true },
-      { name: '🔍 Last Checked', value: `\`${lastCode}\``, inline: false },
+      { name: '─────────────────────────', value: '\u200B', inline: false },
+      { name: '✅  Valid Links', value: `> **${hits}**`, inline: true },
+      { name: '⏱️  Rate Limits', value: `> **${rateLimitHits}**`, inline: true },
+      { name: '🔍  Last Checked', value: `> \`${lastCode}\``, inline: false },
     )
-    .setFooter({ text: 'Bot is checking codes — do not close Discord' })
+    .setFooter({ text: '✦ Checking codes — do not close Discord ✦' })
     .setTimestamp();
 }
 
@@ -43,31 +44,35 @@ function buildFinalEmbed(result, hits, count, prefix) {
   const elapsed = (result.elapsed / 1000).toFixed(1);
 
   const embed = new EmbedBuilder()
-    .setTitle(hits.length > 0 ? '🎉 Snipe Complete — Hits Found!' : '🔍 Snipe Complete — No Hits')
+    .setTitle(hits.length > 0 ? '✦ Snipe Complete — Hits Found! ✦' : '✦ Snipe Complete — No Hits ✦')
     .setColor(hits.length > 0 ? Colors.Green : Colors.Grey)
     .addFields(
-      { name: '📊 Codes Checked', value: `${count}`, inline: true },
-      { name: '✅ Valid Links', value: `${hits.length}`, inline: true },
-      { name: '⏱️ Time Elapsed', value: `${elapsed}s`, inline: true },
-      { name: '⚡ Rate Limit Hits', value: `${result.rateLimitHits}`, inline: true },
+      { name: '📊  Codes Checked', value: `> **${count}**`, inline: true },
+      { name: '✅  Valid Links', value: `> **${hits.length}**`, inline: true },
+      { name: '⏱️  Time Elapsed', value: `> **${elapsed}s**`, inline: true },
+      { name: '─────────────────────────', value: '\u200B', inline: false },
+      { name: '⚡  Rate Limits', value: `> **${result.rateLimitHits}**`, inline: true },
     )
     .setTimestamp();
 
-  if (prefix) embed.addFields({ name: '🔑 Prefix Used', value: `\`${prefix}\``, inline: true });
+  if (prefix) embed.addFields({ name: '🔑  Prefix Used', value: `> \`${prefix}\``, inline: true });
 
   if (hits.length > 0) {
     const hitList = hits
       .map(h =>
-        `• **https://discord.gift/${h.code}**\n` +
-        `  ↳ Type: ${h.type ?? 'Unknown'}` +
-        (h.expiresAt ? `  |  Expires: <t:${Math.floor(new Date(h.expiresAt) / 1000)}:R>` : '')
+        `> **https://discord.gift/${h.code}**\n` +
+        `> ↳ Type: ${h.type ?? 'Unknown'}` +
+        (h.expiresAt ? `  •  Expires: <t:${Math.floor(new Date(h.expiresAt) / 1000)}:R>` : '')
       )
       .join('\n');
-    embed.setDescription(`**🎁 Valid Gift Links:**\n${hitList}`);
+    embed.setDescription(`**Valid Gift Links:**\n${hitList}`);
   } else {
     embed.setDescription(
-      '> No valid unclaimed gift links found in this run.\n' +
-      '> Discord codes are truly random — try again or use a prefix seed from a recently seen code!'
+      `> No valid unclaimed gift links were found in this run.\n\n` +
+      `─────────────────────────\n` +
+      `**Tips:**\n` +
+      `> Discord gift codes are fully random — persistence is key.\n` +
+      `> Try using a prefix seed from a recently seen code to bias generation toward valid patterns.`
     );
   }
 
@@ -128,13 +133,16 @@ module.exports = {
     await interaction.editReply({
       embeds: [
         new EmbedBuilder()
-          .setTitle('🎁 Gift Sniper — Starting...')
+          .setTitle('✦ Gift Sniper — Initializing ✦')
           .setColor(Colors.Blurple)
           .setDescription(
-            `Preparing to check **${count}** codes${prefix ? ` with prefix \`${prefix}\`` : ''}.\n` +
-            `Estimated time: **${estimatedTime(count)}**\n\n` +
-            `> IQ Mode: 6 workers, positional frequency analysis, adaptive backoff\n` +
-            `> Every code is validated via the Discord API in real-time`
+            `Preparing to check **${count}** codes${prefix ? ` with prefix \`${prefix}\`` : ''}.\n\n` +
+            `─────────────────────────\n` +
+            `> Estimated Time: **${estimatedTime(count)}**\n` +
+            `> Workers: **6 concurrent**\n` +
+            `> Method: **Positional frequency analysis + adaptive backoff**\n` +
+            `> Validation: **Discord API real-time verification**\n` +
+            `─────────────────────────`
           )
           .setTimestamp(),
       ],
@@ -174,10 +182,10 @@ module.exports = {
           .setDescription(
             hits.map(h =>
               `🔗 **https://discord.gift/${h.code}**  ↳ *${h.type ?? 'Gift'}*` +
-              (h.expiresAt ? `  — <t:${Math.floor(new Date(h.expiresAt) / 1000)}:R>` : '')
+              (h.expiresAt ? `  •  <t:${Math.floor(new Date(h.expiresAt) / 1000)}:R>` : '')
             ).join('\n')
           )
-          .setFooter({ text: `Found by /giftsnipe — ${hits.length} link(s)` })
+          .setFooter({ text: `Found by /giftsnipe • ${hits.length} link(s)` })
           .setTimestamp();
 
         await postChannel.send({ embeds: [publicEmbed] });

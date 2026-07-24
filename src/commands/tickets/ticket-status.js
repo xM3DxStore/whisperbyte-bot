@@ -87,14 +87,14 @@ module.exports = {
 
     if (!ticketId) {
       return interaction.reply({
-        embeds: [errorEmbed('Error', 'Please provide a ticket ID or run this command in a ticket channel.')],
+        embeds: [errorEmbed('No Ticket Found', 'Please provide a ticket ID or run this command inside a ticket channel.')],
         ephemeral: true,
       });
     }
 
     const info = db.getTicketInfo(ticketId);
     if (!info || !info.ticket) {
-      return interaction.reply({ embeds: [errorEmbed('Not Found', `Ticket **${ticketId}** not found.`)], ephemeral: true });
+      return interaction.reply({ embeds: [errorEmbed('Ticket Not Found', `No ticket found with ID \`${ticketId}\`.`)], ephemeral: true });
     }
 
     const order = info.orders.length > 0 ? info.orders[0] : null;
@@ -102,7 +102,7 @@ module.exports = {
 
     // Add message count if available
     if (info.messages.length > 0) {
-      embed.addFields({ name: '💬 Messages', value: `${info.messages.length} messages in transcript`, inline: true });
+      embed.addFields({ name: '💬 Transcript', value: `${info.messages.length} message${info.messages.length !== 1 ? 's' : ''} recorded`, inline: true });
     }
 
     await interaction.reply({ embeds: [embed] });
@@ -114,7 +114,7 @@ module.exports = {
 
     const isStaff = interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages);
     if (!isStaff) {
-      return interaction.reply({ embeds: [errorEmbed('Permission Denied', 'Only staff members can update ticket status.')], ephemeral: true });
+      return interaction.reply({ embeds: [errorEmbed('Access Denied', 'Only staff members with Manage Messages permission can update ticket status.')], ephemeral: true });
     }
 
     try {
@@ -127,7 +127,7 @@ module.exports = {
       );
 
       await interaction.reply({
-        embeds: [successEmbed('Status Updated', `Ticket **${ticketId}** status changed to **${status}**.`)],
+        embeds: [successEmbed('Status Updated', `Ticket ${ticketId} status has been changed to ${status}.`)],
       });
 
       // Notify in ticket channel
@@ -135,7 +135,7 @@ module.exports = {
         const channel = interaction.guild.channels.cache.get(ticket.channel_id);
         if (channel) {
           await channel.send({
-            embeds: [infoEmbed('Status Update', `Ticket status updated to **${status}** by ${interaction.user}.`)],
+            embeds: [infoEmbed('Status Update', `Ticket status has been updated to **${status}** by ${interaction.user}.`)],
           });
         }
       }
@@ -152,17 +152,25 @@ module.exports = {
 
     if (tickets.length === 0) {
       return interaction.reply({
-        embeds: [infoEmbed('📋 Tickets', filter === 'ALL' ? 'No tickets found.' : `No ${filter.toLowerCase()} tickets found.`)],
+        embeds: [infoEmbed('No Tickets Found',
+          filter === 'ALL'
+            ? 'No tickets have been created yet.\n\n' +
+              '💡 **Tip:** Use `/ticket-create` to open your first support ticket, or ask a team member to run `/ticket-panel setup` for automatic configuration.'
+            : `No tickets with status \`${filter}\` were found.\n\n` +
+              '💡 **Tip:** Try a different filter or use `ALL` to see every ticket regardless of status.'
+        )],
         ephemeral: true,
       });
     }
 
+    const statusEmoji = { OPEN: '🟢', PENDING: '🟡', RESOLVED: '🔵', CLOSED: '🔴' };
+
     const items = tickets.slice(0, 20).map((t, i) =>
-      `\`${t.ticket_id}\` | ${t.status === 'OPEN' ? '🟢' : t.status === 'PENDING' ? '🟡' : t.status === 'RESOLVED' ? '🔵' : '🔴'} ${t.status} | ${t.subject.substring(0, 40)} | <@${t.creator_id}> | ${formatDate(t.created_at)}`
+      `\`${i + 1}.\`  ${statusEmoji[t.status] || '⚪'} **${t.status}**  ·  \`${t.ticket_id}\`  ·  ${t.subject.substring(0, 40)}  ·  <@${t.creator_id}>  ·  ${formatDate(t.created_at)}`
     );
 
     const embed = listEmbed(
-      `📋 Tickets (${tickets.length})`,
+      `All Tickets — ${tickets.length} total`,
       items,
       1,
       1
@@ -176,17 +184,22 @@ module.exports = {
 
     if (tickets.length === 0) {
       return interaction.reply({
-        embeds: [infoEmbed('📋 Your Tickets', 'You have no tickets. Use `/ticket-create` to create one.')],
+        embeds: [infoEmbed('No Tickets Found',
+          'You haven\'t created any tickets yet.\n\n' +
+          '💡 **Tip:** Use `/ticket-create` to open a support ticket and get help from our team.'
+        )],
         ephemeral: true,
       });
     }
 
+    const statusEmoji = { OPEN: '🟢', PENDING: '🟡', RESOLVED: '🔵', CLOSED: '🔴' };
+
     const items = tickets.map((t, i) =>
-      `\`${t.ticket_id}\` | ${t.status === 'OPEN' ? '🟢' : t.status === 'PENDING' ? '🟡' : t.status === 'RESOLVED' ? '🔵' : '🔴'} ${t.status} | ${t.subject.substring(0, 40)} | ${formatDate(t.created_at)}`
+      `\`${i + 1}.\`  ${statusEmoji[t.status] || '⚪'} **${t.status}**  ·  \`${t.ticket_id}\`  ·  ${t.subject.substring(0, 40)}  ·  ${formatDate(t.created_at)}`
     );
 
     const embed = listEmbed(
-      `📋 Your Tickets (${tickets.length})`,
+      `Your Tickets — ${tickets.length} total`,
       items,
       1,
       1

@@ -87,28 +87,36 @@ module.exports = {
 
     let roleText = 'Everyone: **1** entry';
     if (roleWeights.length > 0) {
-      roleText = roleWeights.map(r => `• <@&${r.roleId}>: **${r.entries}** entries`).join('\n') + '\n• Everyone else: **1** entry';
+      roleText = roleWeights.map(r => `> <@&${r.roleId}> → **${r.entries}** entries`).join('\n') + '\n> Everyone else → **1** entry';
     }
 
     const embed = new EmbedBuilder()
-      .setTitle(`🎉 GIVEAWAY — ${prize}`)
+      .setTitle('✦ GIVEAWAY ✦')
       .setColor(Colors.Gold)
-      .setDescription(description)
-      .addFields(
-        { name: '🏆 Prize', value: prize, inline: true },
-        { name: '👥 Winners', value: `${winnerCount}`, inline: true },
-        { name: '⏰ Ends', value: `<t:${endTimestamp}:R> (<t:${endTimestamp}:f>)`, inline: true },
-        { name: '🎟️ Entry Weights', value: roleText, inline: false },
+      .setDescription(
+        `> ${description}\n\n` +
+        `─────────────────────────`
       )
-      .setFooter({ text: 'Click the button below to enter!' })
+      .addFields(
+        { name: '🏆  Prize', value: `**${prize}**`, inline: false },
+        { name: '\u200B', value: '\u200B', inline: false },
+        { name: '⚙  Configuration', value: [
+          `> Winners: **${winnerCount}**`,
+          `> Duration: **${durationText}**`,
+          `> Ends: <t:${endTimestamp}:R>  •  <t:${endTimestamp}:f>`,
+        ].join('\n'), inline: false },
+        { name: '\u200B', value: '\u200B', inline: false },
+        { name: '📊  Entry Weights', value: roleText, inline: false },
+      )
+      .setFooter({ text: '✦ Click a button below to participate ✦' })
       .setTimestamp();
 
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('giveaway_enter')
-        .setLabel(`Enter Giveaway`)
+        .setLabel('Enter Giveaway')
         .setEmoji('🎟️')
-        .setStyle(ButtonStyle.Success),
+        .setStyle(ButtonStyle.Primary),
       new ButtonBuilder()
         .setCustomId('giveaway_entries')
         .setLabel('My Entries')
@@ -170,9 +178,15 @@ async function endGiveaway(giveaway, client) {
     const entries = giveaway.entries;
     if (entries.size === 0) {
       const noWinnerEmbed = new EmbedBuilder()
-        .setTitle(`🎉 GIVEAWAY ENDED — ${giveaway.prize}`)
+        .setTitle('✦ GIVEAWAY ENDED ✦')
         .setColor(Colors.Grey)
-        .setDescription('No one entered the giveaway. Better luck next time!')
+        .setDescription(
+          `> **${giveaway.prize}**\n\n` +
+          `─────────────────────────\n` +
+          `> No one entered this giveaway.\n` +
+          `> Better luck next time!`
+        )
+        .setFooter({ text: 'No winners to announce' })
         .setTimestamp();
 
       await message.edit({ embeds: [noWinnerEmbed], components: [] });
@@ -205,21 +219,28 @@ async function endGiveaway(giveaway, client) {
       : 'No winner selected';
 
     const endedEmbed = new EmbedBuilder()
-      .setTitle(`🎉 GIVEAWAY ENDED — ${giveaway.prize}`)
+      .setTitle('✦ GIVEAWAY ENDED ✦')
       .setColor(Colors.Gold)
-      .setDescription(giveaway.description)
-      .addFields(
-        { name: '🏆 Winner(s)', value: winnerText, inline: false },
-        { name: '📊 Total Entries', value: `${entries.size} unique entries`, inline: true },
-        { name: '🎟️ Total Weighted', value: `${weightedPool.length + winners.length} total entries in pool`, inline: true },
+      .setDescription(
+        `> **${giveaway.prize}**\n\n` +
+        `─────────────────────────`
       )
+      .addFields(
+        { name: '🏆  Winner(s)', value: winners.length > 0 ? winners.map(id => `> <@${id}>`).join('\n') : '> No winner selected', inline: false },
+        { name: '\u200B', value: '\u200B', inline: false },
+        { name: '📊  Statistics', value: [
+          `> Unique Entries: **${entries.size}**`,
+          `> Total Weighted: **${weightedPool.length + winners.length}**`,
+        ].join('\n'), inline: false },
+      )
+      .setFooter({ text: '✦ Congratulations to the winner(s) ✦' })
       .setTimestamp();
 
     await message.edit({ embeds: [endedEmbed], components: [] });
 
     if (winners.length > 0) {
       await channel.send({
-        content: `Congratulations ${winnerText}! You won **${giveaway.prize}**! 🎉`,
+        content: `🎉 Congratulations ${winnerText}! You won **${giveaway.prize}**!\n─────────────────────────\nClaim your prize now!`,
       });
     }
 
@@ -239,7 +260,7 @@ async function endGiveaway(giveaway, client) {
 module.exports.handleButton = async function handleButton(interaction) {
   const giveaway = activeGiveaways.get(interaction.message.id);
   if (!giveaway || giveaway.ended) {
-    return interaction.reply({ content: 'This giveaway has ended.', ephemeral: true });
+    return interaction.reply({ embeds: [errorEmbed('Giveaway Ended', 'This giveaway has ended.')], ephemeral: true });
   }
 
   if (interaction.customId === 'giveaway_entries') {
@@ -250,13 +271,17 @@ module.exports.handleButton = async function handleButton(interaction) {
     return interaction.reply({
       embeds: [
         new EmbedBuilder()
-          .setTitle('🎟️ Your Entry Info')
+          .setTitle('✦ Your Entry Info ✦')
           .setColor(Colors.Blurple)
-          .addFields(
-            { name: 'Your Weight', value: `**${weight}** entries`, inline: true },
-            { name: 'Status', value: entries > 0 ? '✅ Entered' : '❌ Not entered', inline: true },
-            { name: 'Time Left', value: `<t:${Math.floor(giveaway.endTime / 1000)}:R>`, inline: true },
+          .setDescription(
+            `─────────────────────────`
           )
+          .addFields(
+            { name: '🎟️  Your Weight', value: `> **${weight}** entries`, inline: true },
+            { name: '📋  Status', value: entries > 0 ? '> ✅ Entered' : '> ❌ Not Entered', inline: true },
+            { name: '⏰  Time Left', value: `> <t:${Math.floor(giveaway.endTime / 1000)}:R>`, inline: true },
+          )
+          .setFooter({ text: '✦ Toggle entry with the button below ✦' })
           .setTimestamp(),
       ],
       ephemeral: true,
@@ -270,17 +295,17 @@ module.exports.handleButton = async function handleButton(interaction) {
     if (giveaway.entries.has(interaction.user.id)) {
       giveaway.entries.delete(interaction.user.id);
       return interaction.reply({
-        embeds: [successEmbed('Entry Removed', `You have been removed from **${giveaway.prize}**. Click the button again to re-enter.`)],
+        embeds: [successEmbed('Entry Removed', `You have been removed from ${giveaway.prize}.\nClick the button again to re-enter.`)],
         ephemeral: true,
       });
     }
 
     giveaway.entries.set(interaction.user.id, weight);
 
-    const roleInfo = weight > 1 ? `\n*Bonus: ${weight} entries due to your roles!*` : '';
+    const roleInfo = weight > 1 ? `\n\nBonus: You receive ${weight} entries due to your role!` : '';
 
     return interaction.reply({
-      embeds: [successEmbed('Entered!', `You entered **${giveaway.prize}** with **${weight}** entry entries.\nTime left: <t:${Math.floor(giveaway.endTime / 1000)}:R>${roleInfo}`)],
+      embeds: [successEmbed('Entered!', `You have entered ${giveaway.prize} with ${weight} entries.\nTime left: <t:${Math.floor(giveaway.endTime / 1000)}:R>${roleInfo}`)],
       ephemeral: true,
     });
   }

@@ -43,8 +43,8 @@ class XPSystem {
     // Check if the channel should be ignored
     if (this._isIgnoredChannel(guildId, channelId)) return null;
 
-    // Check for spam - don't award XP to spammers
-    if (spamDetector.analyze(message, message.member).isSpam) {
+    // Check for spam - don't award XP to spammers (skip if anti-spam disabled)
+    if (guildConfig && guildConfig.spam_enabled && spamDetector.analyze(message, message.member).isSpam) {
       return null;
     }
 

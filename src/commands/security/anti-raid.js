@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
-const { successEmbed, errorEmbed, infoEmbed } = require('../../utils/embedBuilder');
+const { successEmbed, errorEmbed, infoEmbed, BRAND } = require('../../utils/embedBuilder');
 const logger = require('../../services/logger');
 
 module.exports = {
@@ -53,21 +53,26 @@ module.exports = {
     const lockdown = raidDetector.getLockdownStatus(interaction.guild.id);
     const db = require('../../database');
     const guild = db.ensureGuild(interaction.guild.id);
+    const enabled = guild.anti_raid_enabled;
 
-    const statusLines = [
-      '**Protection:** ' + (guild.anti_raid_enabled ? 'Enabled' : 'Disabled'),
-      '**Lockdown:** ' + (lockdown.active
-        ? 'Active (until <t:' + Math.floor(lockdown.until / 1000) + ':R>)'
-        : 'Inactive'),
-      '**Join Threshold:** ' + require('../../config').antiRaid.joinThreshold + ' joins/10s',
-      '',
-      '**Recommended Settings:**',
-      '- Small servers (< 100 members): 3-5 joins/10s',
-      '- Medium servers (100-1000): 5-8 joins/10s',
-      '- Large servers (> 1000): 8-15 joins/10s',
-    ];
+    const shieldIcon = enabled ? '🛡️' : '⚠️';
+    const protectionLevel = enabled ? 'Active' : 'Inactive';
+    const threshold = require('../../config').antiRaid.joinThreshold;
 
-    const embed = infoEmbed('Anti-Raid Status', statusLines.join('\n'));
+    const embed = infoEmbed(
+      'Anti-Raid Status',
+      `${shieldIcon} **Protection Level:** _${protectionLevel}_\n` +
+      `${BRAND.divider}\n` +
+      `\`Status\`      ${enabled ? '🟢 Enabled' : '🔴 Disabled'}\n` +
+      `\`Lockdown\`    ${lockdown.active ? '🔴 Active — ends <t:' + Math.floor(lockdown.until / 1000) + ':R>' : '🟢 Clear'}\n` +
+      `\`Threshold\`   **${threshold}** joins per 10s\n` +
+      `${BRAND.divider}\n` +
+      `**Recommended Thresholds**\n` +
+      `> 🏘️ Small (<100) — **3–5**\n` +
+      `> 🏢 Medium (100–1K) — **5–8**\n` +
+      `> 🌆 Large (1K+) — **8–15**`
+    );
+
     await interaction.reply({ embeds: [embed] });
   },
 
@@ -82,7 +87,9 @@ module.exports = {
     logger.moderation('CONFIG_UPDATE', interaction.user.id, null, 'Anti-raid threshold set to ' + joins, interaction.guild.id);
 
     await interaction.reply({
-      embeds: [successEmbed('Threshold Updated', 'Raid detection threshold set to **' + joins + '** joins per 10 seconds.')],
+      embeds: [successEmbed('Threshold Updated',
+        `Raid detection threshold set to **${joins}** joins per 10 seconds.\nAny spike exceeding this limit will trigger automatic mitigation.`
+      )],
     });
   },
 
@@ -94,13 +101,24 @@ module.exports = {
       'Anti-raid ' + (enabled ? 'enabled' : 'disabled'), interaction.guild.id
     );
 
-    await interaction.reply({
-      embeds: [successEmbed(
-        enabled ? 'Anti-Raid Enabled' : 'Anti-Raid Disabled',
-        enabled
-          ? 'Raid protection is now active. Suspicious join activity will be detected and mitigated.'
-          : 'Raid protection has been disabled. Consider re-enabling it for security.'
-      )],
-    });
+    const embed = enabled
+      ? successEmbed('Anti-Raid Enabled',
+          'Raid protection is now **active**.\n' +
+          `${BRAND.divider}\n` +
+          'What happens when a raid is detected:\n' +
+          '> 🚨 Mass join spike triggers an alert\n' +
+          '> 🔒 Auto-lockdown may engage if threshold is exceeded\n' +
+          '> 👥 Suspicious accounts are flagged for review'
+        )
+      : successEmbed('Anti-Raid Disabled',
+          'Raid protection has been **deactivated**.\n' +
+          `${BRAND.divider}\n` +
+          '⚠️ Without anti-raid protection:\n' +
+          '> ❌ Mass join spikes go undetected\n' +
+          '> ❌ No automatic lockdown during raids\n' +
+          '> ⚠️ Server is vulnerable to coordinate raids'
+        );
+
+    await interaction.reply({ embeds: [embed] });
   },
 };

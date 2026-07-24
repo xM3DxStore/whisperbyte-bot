@@ -12,12 +12,12 @@ const TicketManager = require('./services/ticketManager');
 const RaidDetector = require('./services/raidDetector');
 
 if (!config.token) {
-  logger.error('❌ DISCORD_BOT_TOKEN is not set in .env file');
+  logger.error('DISCORD_BOT_TOKEN is not set in .env file');
   process.exit(1);
 }
 
 if (!config.clientId) {
-  logger.error('❌ DISCORD_CLIENT_ID is not set in .env file');
+  logger.error('DISCORD_CLIENT_ID is not set in .env file');
   process.exit(1);
 }
 
@@ -57,9 +57,10 @@ async function processScheduledAction(action, client) {
 }
 
 async function startBot() {
-  logger.info('🤖 Starting Guardian Security Bot...');
-  logger.info(`   Node.js version: ${process.version}`);
-  logger.info(`   Platform: ${process.platform}`);
+  logger.info('═══════════════════════════════════════');
+  logger.info('  Guardian Security Bot');
+  logger.info(`  Node ${process.version} | ${process.platform}`);
+  logger.info('═══════════════════════════════════════');
 
   const client = new Client({
     intents: [
@@ -89,9 +90,9 @@ async function startBot() {
 
   try {
     await db.initDatabase();
-    logger.info('✅ Database initialized');
+    logger.info('Database initialized');
   } catch (error) {
-    logger.error('❌ Failed to initialize database', { error: error.message });
+    logger.error('Failed to initialize database — ' + error.message);
     process.exit(1);
   }
 
@@ -118,7 +119,7 @@ async function startBot() {
       } catch (error) { logger.error(`Failed to load command ${file}`, { error: error.message }); failedCommands++; }
     }
   }
-  logger.info(`Loaded ${loadedCommands} commands (${failedCommands} failed)`);
+  logger.info(`Loaded ${loadedCommands} commands` + (failedCommands ? ` (${failedCommands} failed)` : ''));
 
   const eventsPath = path.join(__dirname, 'events');
   const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
@@ -159,13 +160,13 @@ async function startBot() {
     logger.error('Uncaught exception', { error: error.message, stack: error.stack });
   });
   process.on('SIGINT', async () => {
-    logger.info('🛑 Shutting down bot gracefully...');
+    logger.info('Shutting down gracefully...');
     try {
       if (client.spamDetector) client.spamDetector.destroy();
       if (client.xpSystem) client.xpSystem.cleanup();
       if (client.raidDetector) client.raidDetector.cleanup();
       client.destroy();
-      logger.info('✅ Bot shutdown complete');
+      logger.info('Bot shutdown complete');
     } catch (error) { logger.error('Error during shutdown', { error: error.message }); }
     process.exit(0);
   });
@@ -173,9 +174,9 @@ async function startBot() {
 
   try {
     await client.login(config.token);
-    logger.info('✅ Bot logged in successfully');
+    logger.info('Login successful');
 
-    logger.info('🔄 Registering slash commands...');
+    logger.info('Registering slash commands...');
     const commandsData = [];
     client.commands.forEach(cmd => {
       const json = cmd.data.toJSON();
@@ -191,23 +192,23 @@ async function startBot() {
     if (validGuildId) {
       logger.info(`Registering ${commandsData.length} commands to guild ${validGuildId}...`);
       await rest.put(Routes.applicationGuildCommands(config.clientId, validGuildId), { body: commandsData });
-      logger.info(`✅ Registered ${commandsData.length} guild commands instantly`);
+      logger.info(`Registered ${commandsData.length} guild commands`);
 
       // Clear stale global commands
       try {
         const oldGlobal = await rest.get(Routes.applicationCommands(config.clientId));
         if (oldGlobal.length > 0) {
           await rest.put(Routes.applicationCommands(config.clientId), { body: [] });
-          logger.info(`✅ Cleared ${oldGlobal.length} stale global commands`);
+          logger.info(`Cleared ${oldGlobal.length} stale global commands`);
         }
       } catch (e) { /* ignore */ }
     } else {
       logger.info(`Registering ${commandsData.length} commands globally...`);
       await rest.put(Routes.applicationCommands(config.clientId), { body: commandsData });
-      logger.info(`✅ Registered ${commandsData.length} global commands`);
+      logger.info(`Registered ${commandsData.length} global commands`);
     }
   } catch (error) {
-    logger.error('❌ Failed to login', { error: error.message });
+    logger.error('Failed to login — ' + error.message);
     process.exit(1);
   }
 }

@@ -32,7 +32,7 @@ module.exports = {
         ticketId = channelTicket.ticket_id;
       } else {
         return interaction.reply({
-          embeds: [errorEmbed('Error', 'Could not find a ticket for this channel. Please provide a ticket ID.')],
+          embeds: [errorEmbed('No Ticket Found', 'Could not detect a ticket in this channel.\nPlease provide a ticket ID manually.')],
           ephemeral: true,
         });
       }
@@ -43,13 +43,17 @@ module.exports = {
     try {
       await interaction.client.ticketManager.closeTicket(interaction, ticketId, reason);
       await interaction.editReply({
-        embeds: [successEmbed('Ticket Closed',
-          `Ticket **${ticketId}** has been closed and will be deleted shortly.`
+        embeds: [successEmbed('Ticket Closed & Archived',
+          `Ticket **${ticketId}** has been permanently closed and archived.\n` +
+          `─────────────────────────\n\n` +
+          `📦  Transcript saved to database\n` +
+          `🔔  Creator notified of closure\n` +
+          `⚠️  This channel will be deleted automatically in **30 seconds**`
         )],
       });
     } catch (error) {
       await interaction.editReply({
-        embeds: [errorEmbed('Error', error.message)],
+        embeds: [errorEmbed('Failed to Close Ticket', error.message)],
       });
     }
   },

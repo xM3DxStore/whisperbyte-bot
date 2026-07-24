@@ -29,7 +29,8 @@ module.exports = {
     // =====================================================================
     // 1. AI-Powered Spam Detection
     // =====================================================================
-    if (message.content) {
+    const guild = db.ensureGuild(guildId);
+    if (message.content && guild.spam_enabled) {
       const analysis = spamDetector.analyze(message, member);
 
       if (analysis.isSpam) {

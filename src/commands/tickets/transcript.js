@@ -94,7 +94,13 @@ module.exports = {
     );
 
     await interaction.editReply({
-      embeds: [successEmbed('Transcript Exported', `Ticket **${ticketId}** transcript with **${messages.length}** messages.`)],
+      embeds: [successEmbed('Transcript Exported',
+        `Ticket **${ticketId}** transcript has been exported successfully.\n` +
+        `─────────────────────────\n\n` +
+        `📄  Format:       ${format.toUpperCase()}\n` +
+        `💬  Messages:     ${messages.length}\n` +
+        `📎  Filename:     ${filename}`
+      )],
       files: [attachment],
     });
   },

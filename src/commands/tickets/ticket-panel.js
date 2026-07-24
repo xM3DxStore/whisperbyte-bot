@@ -34,9 +34,12 @@ module.exports = {
     await interaction.client.ticketManager.createTicketPanel(interaction.channel);
 
     await interaction.editReply({
-      embeds: [successEmbed('Ticket Panel Created',
-        'The ticket creation panel has been set up in this channel.\n' +
-        'Users can select a ticket type from the dropdown to create a support ticket.'
+      embeds: [successEmbed('Ticket Panel Deployed',
+        'The ticket creation panel is now live in this channel.\n' +
+        '─────────────────────────\n' +
+        'Users can select a ticket type from the dropdown menu below to open a new support request.\n\n' +
+        '📋 Panel Status: Active\n' +
+        '🎯 Channel: ' + interaction.channel
       )],
     });
   },
@@ -78,14 +81,20 @@ module.exports = {
 
     // 4. Notify
     await interaction.editReply({
-      embeds: [successEmbed('✅ Auto-Setup Complete',
-        `**Ticket Panel Channel:** ${panelChannel}\n` +
-        `**Support Role:** ${supportRole}\n\n` +
-        `What was done:\n` +
-        `1. Created ${panelChannel} for ticket creation\n` +
-        `2. Created/verified support role: ${supportRole.name}\n` +
-        `3. Set up ticket category and permissions\n\n` +
-        `Assign the ${supportRole} role to your support staff to give them access to all tickets.`
+      embeds: [successEmbed('Auto-Setup Complete',
+        `The ticket system has been fully configured for this server.\n` +
+        `─────────────────────────\n\n` +
+        `✅  Step 1 — Created ticket panel channel\n` +
+        `      ${panelChannel}\n` +
+        `✅  Step 2 — Created support role\n` +
+        `      ${supportRole}\n` +
+        `✅  Step 3 — Configured ticket category & permissions\n` +
+        `✅  Step 4 — Deployed ticket creation panel\n` +
+        `─────────────────────────\n\n` +
+        `📋  Next Steps\n` +
+        `•  Assign ${supportRole} to your support staff\n` +
+        `•  Customize ticket types via the panel dropdown\n` +
+        `•  Review channel permissions as needed`
       )],
     });
   },
